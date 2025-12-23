@@ -142,8 +142,9 @@ export default function OkaneSpecials() {
         onAction={handleAddNew}
       />
 
+
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           icon={<Building2 className="w-6 h-6 text-emerald-600" />}
           title="Total Companies"
@@ -174,14 +175,14 @@ export default function OkaneSpecials() {
       </div>
 
       {/* Companies Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {companies.map((company) => (
-          <Card key={company.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="relative h-48 w-full overflow-hidden bg-gray-200">
+          <Card key={company.id} className="overflow-hidden transition-shadow hover:shadow-lg">
+            <div className="relative w-full h-48 overflow-hidden bg-gray-200">
               <ImageWithFallback
                 src={company.image}
                 alt={company.name}
-                className="w-full h-full object-cover"
+                className="object-cover w-full h-full"
               />
               <StatusBadge
                 status={company.status}
@@ -211,7 +212,7 @@ export default function OkaneSpecials() {
                 <Badge variant="outline">{company.category}</Badge>
               </div>
               <Button 
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="w-full text-white bg-emerald-600 hover:bg-emerald-700"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -247,12 +248,12 @@ export default function OkaneSpecials() {
 
       {companies.length === 0 && (
         <EmptyState
-          icon={<Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />}
+          icon={<Building2 className="w-16 h-16 mx-auto mb-4 text-gray-400" />}
           title="No companies yet"
           subtitle="Get started by adding your first Okane Special"
           action={
             <Button
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="text-white bg-emerald-600 hover:bg-emerald-700"
               onClick={handleAddNew}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -318,7 +319,7 @@ export default function OkaneSpecials() {
               placeholder="e.g., Technology, Finance, Real Estate"
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormInput
                 control={form.control}
                 name="location"
@@ -335,7 +336,7 @@ export default function OkaneSpecials() {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormInput
                 control={form.control}
                 name="revenue"
