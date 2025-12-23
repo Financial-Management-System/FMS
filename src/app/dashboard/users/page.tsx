@@ -13,10 +13,12 @@ import { PageHeader } from '@/src/components/custom/pageHeader';
 import { StatsCard } from '@/src/components/custom/statsCard';
 import { SearchBar } from '@/src/components/custom/searchBar';
 import { StatusBadge } from '@/src/components/custom/StatusBadge';
-import { DataTable } from '@/src/components/custom/DataTable';
-import { FormWrapper, FormInput, FormSelect } from '@/src/components/custom';
+import { DataTable } from '@/src/components/dataTable/dataTable';
+import { FormWrapper, FormInput, FormSelect, StatCard } from '@/src/components/custom';
 import { UserSchema, UserFormData } from '@/src/schema';
 import { User } from '@/src/types';
+import { SectionCard } from '@/src/components/custom/sectionCard';
+import { StandaloneSelect } from '@/src/components/custom/standaloneSelect';
 
 const users: User[] = [
   { id: 1, name: 'John Smith', email: 'john@example.com', role: 'Premium', status: 'Active', balance: 45230, joinDate: '2024-01-15', transactions: 124 },
@@ -173,81 +175,86 @@ export default function Users() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <StatsCard
+        <StatCard
           title="Total Users"
           value={users.length}
           icon={UsersIcon}
+          variant="gray"
+          size="medium"
         />
-        <StatsCard
+        <StatCard
           title="Active Users"
           value={users.filter(u => u.status === 'Active').length}
           icon={UserCheck}
-          iconColor="text-emerald-600"
-          iconBgColor="bg-emerald-100"
-          valueColor="text-emerald-600"
+          variant="emerald"
+          size="medium"
         />
-        <StatsCard
+        <StatCard
           title="Suspended"
           value={users.filter(u => u.status === 'Suspended').length}
           icon={UserX}
-          iconColor="text-red-600"
-          iconBgColor="bg-red-100"
-          valueColor="text-red-600"
+          variant="red"
+          size="medium"
         />
-        <StatsCard
+        <StatCard
           title="Total Balance"
           value={`$${users.reduce((sum, u) => sum + u.balance, 0).toLocaleString()}`}
           icon={DollarSign}
+          variant="gray"
+          size="medium"
         />
       </div>
 
       {/* Search and Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <SearchBar
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder="Search by name or email..."
+      <SectionCard>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <SearchBar
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Search by name or email..."
+          />
+          <div className="flex gap-2">
+            <StandaloneSelect
+              value={roleFilter}
+              onValueChange={setRoleFilter}
+              label="Role"
+              options={[
+                { value: 'All', label: 'All Roles' },
+                { value: 'Enterprise', label: 'Enterprise' },
+                { value: 'Premium', label: 'Premium' },
+                { value: 'Standard', label: 'Standard' },
+              ]}
             />
-            <div className="flex gap-2">
-              <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-full sm:w-[140px]">
-                  <SelectValue placeholder="All Roles" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All Roles</SelectItem>
-                  <SelectItem value="Enterprise">Enterprise</SelectItem>
-                  <SelectItem value="Premium">Premium</SelectItem>
-                  <SelectItem value="Standard">Standard</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[140px]">
-                  <SelectValue placeholder="All Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All Status</SelectItem>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Suspended">Suspended</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <StandaloneSelect
+              value={statusFilter}
+              onValueChange={setStatusFilter}
+              label="Status"
+              options={[
+                { value: 'All', label: 'All Status' },
+                { value: 'Active', label: 'Active' },
+                { value: 'Suspended', label: 'Suspended' },
+                { value: 'Inactive', label: 'Inactive' },
+              ]}
+            />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </SectionCard>
 
       {/* Users Table */}
-      <Card>
-        <CardContent className="pt-6">
-          <DataTable
-            columns={userColumns}
-            data={filteredUsers}
-            emptyMessage="No users found"
-          />
-        </CardContent>
-      </Card>
+      <SectionCard title="All Users">
+        <DataTable
+          columns={userColumns}
+          data={filteredUsers}
+          showPagination={true}
+          paginationOptions={{
+            pageSizeOptions: [10, 20, 30, 50],
+            showRowsPerPage: true,
+            showFirstLastButtons: true,
+            showPageInfo: true,
+            showSelectedRows: false,
+          }}
+        />
+      </SectionCard>
 
       {/* User Form Dialog */}
       <FormWrapper

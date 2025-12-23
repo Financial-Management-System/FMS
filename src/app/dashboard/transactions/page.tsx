@@ -10,8 +10,12 @@ import { PageHeader } from '@/src/components/custom/pageHeader';
 import { StatsCard } from '@/src/components/custom/statsCard';
 import { SearchBar } from '@/src/components/custom/searchBar';
 import { StatusBadge } from '@/src/components/custom/StatusBadge';
-import { DataTable } from '@/src/components/custom/DataTable';
+import { DataTable } from '@/src/components/dataTable/dataTable';
 import { Transaction } from '@/src/types';
+import { SectionCard } from '@/src/components/custom/sectionCard';
+import { StatCard } from '@/src/components/custom/statCard';
+import { StandaloneSelect } from '@/src/components/custom/standaloneSelect';
+
 
 // Generate more transactions for pagination demo
 const generateTransactions = (): Transaction[] => {
@@ -28,8 +32,8 @@ const generateTransactions = (): Transaction[] => {
     { name: 'Patricia White', email: 'patricia@example.com' },
   ];
 
-  const types: Transaction['type'][] = ['Deposit', 'Withdrawal', 'Transfer', 'Payment'];
-  const statuses: Transaction['status'][] = ['Completed', 'Pending', 'Failed'];
+  const types = ['Deposit', 'Withdrawal', 'Transfer', 'Payment'];
+  const statuses = ['Completed', 'Pending', 'Failed'];
   const methods = ['Bank Transfer', 'Wire Transfer', 'Credit Card', 'Debit Card', 'Internal Transfer'];
 
   const transactions: Transaction[] = [];
@@ -156,94 +160,94 @@ export default function Transactions() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <StatsCard
+        <StatCard
           title="Total Transactions"
           value={filteredTransactions.length}
           icon={TrendingUp}
-          iconColor="text-emerald-600"
-          iconBgColor="bg-emerald-100"
+          variant="emerald"
+          size="medium"
         />
-        <StatsCard
+        <StatCard
           title="Net Amount"
           value={`$${Math.abs(totalAmount).toLocaleString()}`}
           icon={DollarSign}
-          iconColor={totalAmount >= 0 ? 'text-emerald-600' : 'text-red-600'}
-          iconBgColor={totalAmount >= 0 ? 'bg-emerald-100' : 'bg-red-100'}
-          valueColor={totalAmount >= 0 ? 'text-emerald-600' : 'text-red-600'}
+          variant={totalAmount >= 0 ? 'emerald' : 'red'}
+          size="medium"
         />
-        <StatsCard
+        <StatCard
           title="Pending"
           value={pendingCount}
           icon={Clock}
-          iconColor="text-yellow-600"
-          iconBgColor="bg-yellow-100"
-          valueColor="text-yellow-600"
+          variant="yellow"
+          size="medium"
         />
-        <StatsCard
+        <StatCard
           title="Failed"
           value={failedCount}
           icon={AlertCircle}
-          iconColor="text-red-600"
-          iconBgColor="bg-red-100"
-          valueColor="text-red-600"
+          variant="red"
+          size="medium"
         />
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <SearchBar
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder="Search by ID, user, or email..."
-            />
+      <SectionCard>
+        <div className="flex flex-col lg:flex-row gap-4">
+          <SearchBar
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Search by ID, user, or email..."
+          />
 
-            {/* Status Filter */}
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full lg:w-[180px]">
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All Statuses</SelectItem>
-                <SelectItem value="Completed">Completed</SelectItem>
-                <SelectItem value="Pending">Pending</SelectItem>
-                <SelectItem value="Failed">Failed</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Status Filter */}
+          <StandaloneSelect
+            value={statusFilter}
+            onValueChange={setStatusFilter}
+            placeholder="All Statuses"
+            options={[
+              { value: 'All', label: 'All Statuses' },
+              { value: 'Completed', label: 'Completed' },
+              { value: 'Pending', label: 'Pending' },
+              { value: 'Failed', label: 'Failed' },
+            ]}
+          />
 
-            {/* Type Filter */}
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full lg:w-[180px]">
-                <SelectValue placeholder="All Types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All Types</SelectItem>
-                <SelectItem value="Deposit">Deposit</SelectItem>
-                <SelectItem value="Withdrawal">Withdrawal</SelectItem>
-                <SelectItem value="Transfer">Transfer</SelectItem>
-                <SelectItem value="Payment">Payment</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Type Filter */}
+          <StandaloneSelect
+            value={typeFilter}
+            onValueChange={setTypeFilter}
+            placeholder="All Types"
+            options={[
+              { value: 'All', label: 'All Types' },
+              { value: 'Deposit', label: 'Deposit' },
+              { value: 'Withdrawal', label: 'Withdrawal' },
+              { value: 'Transfer', label: 'Transfer' },
+              { value: 'Payment', label: 'Payment' },
+            ]}
+          />
 
-            <Button variant="outline">
-              <Filter className="w-4 h-4 mr-2" />
-              More Filters
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          <Button variant="outline">
+            <Filter className="w-4 h-4 mr-2" />
+            More Filters
+          </Button>
+        </div>
+      </SectionCard>
 
       {/* Transactions Table */}
-      <Card>
-        <CardContent className="pt-6">
-          <DataTable
-            columns={transactionColumns}
-            data={filteredTransactions}
-            emptyMessage="No transactions found"
-          />
-        </CardContent>
-      </Card>
+      <SectionCard title="All Transactions">
+        <DataTable
+          columns={transactionColumns}
+          data={filteredTransactions}
+          showPagination={true}
+          paginationOptions={{
+            pageSizeOptions: [10, 20, 30, 50],
+            showRowsPerPage: true,
+            showFirstLastButtons: true,
+            showPageInfo: true,
+            showSelectedRows: false,
+          }}
+        />
+      </SectionCard>
     </div>
   );
 }
