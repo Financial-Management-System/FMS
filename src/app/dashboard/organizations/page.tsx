@@ -9,6 +9,7 @@ import { Badge } from '@/src/components/ui/badge';
 import { ImageWithFallback } from '@/src/components/custom/imageWithFallback';
 import { PageHeader } from '@/src/components/custom/pageHeader';
 import { StatsCard } from '@/src/components/custom/statsCard';
+import { StatCard } from '@/src/components/custom/statCard';
 import { EmptyState } from '@/src/components/custom/emptyState';
 import { StatusBadge } from '@/src/components/custom/StatusBadge';
 import { FormWrapper, FormInput, FormTextarea, FormSelect } from '@/src/components/custom';

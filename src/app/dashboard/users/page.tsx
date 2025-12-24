@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from '@/src/components/ui/avatar';
 import { toast } from 'react-toastify';
 import { PageHeader } from '@/src/components/custom/pageHeader';
 import { StatsCard } from '@/src/components/custom/statsCard';
+import { StatCard } from '@/src/components/custom/statCard';
 import { SearchBar } from '@/src/components/custom/searchBar';
 import { StatusBadge } from '@/src/components/custom/StatusBadge';
 import { DataTable } from '@/src/components/custom/DataTable';

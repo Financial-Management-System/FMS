@@ -5,6 +5,9 @@ import { Download, TrendingUp, Calendar, Filter, TrendingDown } from 'lucide-rea
 import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/src/components/ui/select';
+import { useForm } from 'react-hook-form';
+import { Form } from '@/src/components/ui/form';
+import { FormSelect } from '@/src/components/custom/formSelect';
 import { StatCard } from '@/src/components/custom/statCard';
 
 const monthlyData = [
@@ -32,6 +35,7 @@ const performanceMetrics = [
 ];
 
 export default function Reports() {
+  const form = useForm({ defaultValues: { range: '6months' } });
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -93,16 +97,20 @@ export default function Reports() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Monthly Performance</CardTitle>
-            <Select defaultValue="6months">
-              <SelectTrigger className="w-[180px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="6months">Last 6 Months</SelectItem>
-                <SelectItem value="12months">Last 12 Months</SelectItem>
-                <SelectItem value="ytd">Year to Date</SelectItem>
-              </SelectContent>
-            </Select>
+            <Form {...form}>
+              <div className="w-[180px]">
+                <FormSelect
+                  control={form.control}
+                  name="range"
+                  label="Date Range"
+                  options={[
+                    { value: '6months', label: 'Last 6 Months' },
+                    { value: '12months', label: 'Last 12 Months' },
+                    { value: 'ytd', label: 'Year to Date' },
+                  ]}
+                />
+              </div>
+            </Form>
           </div>
         </CardHeader>
         <CardContent>
