@@ -67,7 +67,7 @@ export const sidebarSections: SidebarSection[] = [
     title: 'Operations',
     items: [
       { name: 'Transactions', href: 'transactions', icon: ArrowLeftRight },
-      { name: 'Financial Operations', href: 'financial-operations', icon: DollarSign },
+      { name: 'Financial Operations', href: 'financialOperations', icon: DollarSign },
       { name: 'Income', href: 'income', icon: TrendingUp },
       { name: 'Expenses', href: 'expenses', icon: TrendingDown },
       { name: 'Payroll / Salary', href: 'payroll', icon: DollarSign },
