@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
 import { DollarSign, TrendingUp, TrendingDown, Activity, Plus, Download, FileText } from 'lucide-react';
-import { DataTable } from '@/src/components/custom/DataTable';
+import { DataTable } from '@/src/components/dataTable/dataTable';
 import { StatusBadge } from '@/src/components/custom/StatusBadge';
 import { StatCard } from '@/src/components/custom/statCard';
 import { Edit } from 'lucide-react';
