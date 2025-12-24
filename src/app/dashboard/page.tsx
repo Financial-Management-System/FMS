@@ -105,7 +105,7 @@ const recentTransactionColumns: ColumnDef<Transaction>[] = [
     accessorKey: 'date',
     header: 'Date',
     cell: ({ row }) => (
-      <span className="text-gray-600 text-sm">{row.getValue('date')}</span>
+      <span className="text-sm text-gray-600">{row.getValue('date')}</span>
     ),
   },
 ];
@@ -114,7 +114,7 @@ export default function Overview() {
   return (
     <div className="space-y-6">
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <StatCard
             key={stat.name}
@@ -130,7 +130,7 @@ export default function Overview() {
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Revenue Chart */}
         <SectionCard title="Revenue vs Expenses">
           <ResponsiveContainer width="100%" height={300}>
