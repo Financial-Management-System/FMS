@@ -141,7 +141,7 @@ export default function OrganizationDashboard() {
           <div className="space-y-6">
             <div className="text-center py-12">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                Welcome to {orgName}
+                Welcome to {orgName}.
               </h2>
               <p className="text-gray-600">
                 Select a section from the sidebar to get started.

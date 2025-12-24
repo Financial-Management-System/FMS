@@ -1,5 +1,5 @@
 import { Card } from '../ui/card';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '../ui/utils';
 
 interface StatCardProps {
@@ -7,11 +7,12 @@ interface StatCardProps {
   value?: string | number;
   subtitle?: string;
   icon: LucideIcon;
-  variant?: 'emerald' | 'red' | 'blue' | 'yellow' | 'purple' | 'orange' | 'gray';
+  variant?: 'emerald' | 'red' | 'blue' | 'yellow' | 'purple' | 'orange' | 'gray' | 'gradient-emerald' | 'gradient-blue' | 'gradient-purple';
   size?: 'small' | 'medium' | 'large';
   mode?: 'stat' | 'navigation';
   className?: string;
   trend?: 'up' | 'down' | 'neutral';
+  change?: string; // e.g., "+12.5%" or "-3.2%"
   onClick?: () => void;
   active?: boolean;
 }
@@ -26,6 +27,7 @@ export function StatCard({
   mode = 'stat',
   className,
   trend,
+  change,
   onClick,
   active = false
 }: StatCardProps) {
@@ -116,6 +118,42 @@ export function StatCard({
           activeIconColor: 'text-white',
           hoverBorder: 'hover:border-gray-300'
         };
+      case 'gradient-emerald':
+        return {
+          iconBg: 'bg-emerald-100',
+          iconColor: 'text-emerald-600',
+          valueColor: 'text-emerald-600',
+          activeBorder: 'border-emerald-500',
+          activeBg: 'bg-emerald-50',
+          activeText: 'text-emerald-700',
+          activeIconBg: 'bg-emerald-600',
+          activeIconColor: 'text-white',
+          hoverBorder: 'hover:border-emerald-300'
+        };
+      case 'gradient-blue':
+        return {
+          iconBg: 'bg-blue-100',
+          iconColor: 'text-blue-600',
+          valueColor: 'text-blue-600',
+          activeBorder: 'border-blue-500',
+          activeBg: 'bg-blue-50',
+          activeText: 'text-blue-700',
+          activeIconBg: 'bg-blue-600',
+          activeIconColor: 'text-white',
+          hoverBorder: 'hover:border-blue-300'
+        };
+      case 'gradient-purple':
+        return {
+          iconBg: 'bg-purple-100',
+          iconColor: 'text-purple-600',
+          valueColor: 'text-purple-600',
+          activeBorder: 'border-purple-500',
+          activeBg: 'bg-purple-50',
+          activeText: 'text-purple-700',
+          activeIconBg: 'bg-purple-600',
+          activeIconColor: 'text-white',
+          hoverBorder: 'hover:border-purple-300'
+        };
       default:
         return {
           iconBg: 'bg-emerald-100',
@@ -175,6 +213,23 @@ export function StatCard({
   const variantClasses = getVariantClasses();
   const sizeClasses = getSizeClasses();
 
+  // Check if it's a gradient variant
+  const isGradient = variant?.startsWith('gradient-');
+  
+  // Get gradient background class
+  const getGradientBg = () => {
+    switch (variant) {
+      case 'gradient-emerald':
+        return 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-0';
+      case 'gradient-blue':
+        return 'bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0';
+      case 'gradient-purple':
+        return 'bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0';
+      default:
+        return '';
+    }
+  };
+
   // Navigation mode - centered layout
   if (mode === 'navigation') {
     return (
@@ -206,6 +261,38 @@ export function StatCard({
     );
   }
 
+  // Stat mode with gradient support
+  if (isGradient) {
+    return (
+      <Card 
+        className={cn(
+          sizeClasses.padding,
+          getGradientBg(),
+          onClick && 'cursor-pointer hover:shadow-md transition-shadow',
+          className
+        )}
+        onClick={onClick}
+      >
+        <div className="flex items-center justify-between mb-2">
+          <div className={cn('rounded-lg', sizeClasses.padding, 'bg-white bg-opacity-20')}>
+            <Icon className={cn(sizeClasses.iconSize, 'text-white')} />
+          </div>
+        </div>
+        <div>
+          <p className={cn(sizeClasses.titleSize, variant === 'gradient-emerald' ? 'text-emerald-100' : variant === 'gradient-blue' ? 'text-blue-100' : 'text-purple-100')}>{title}</p>
+          {value !== undefined && (
+            <p className={cn(sizeClasses.valueSize, 'mt-2 text-white')}>
+              {value}
+            </p>
+          )}
+          {subtitle && (
+            <p className={cn(sizeClasses.subtitleSize, 'mt-2', variant === 'gradient-emerald' ? 'text-emerald-100' : variant === 'gradient-blue' ? 'text-blue-100' : 'text-purple-100')}>{subtitle}</p>
+          )}
+        </div>
+      </Card>
+    );
+  }
+
   // Stat mode - horizontal layout with value
   return (
     <Card 
@@ -216,21 +303,31 @@ export function StatCard({
       )}
       onClick={onClick}
     >
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className={cn(sizeClasses.titleSize, 'text-gray-600')}>{title}</p>
-          {value !== undefined && (
-            <p className={cn(sizeClasses.valueSize, 'mt-1', variantClasses.valueColor)}>
-              {value}
-            </p>
-          )}
-          {subtitle && (
-            <p className={cn(sizeClasses.subtitleSize, 'text-gray-500 mt-1')}>{subtitle}</p>
-          )}
-        </div>
+      <div className="flex items-center justify-between mb-4">
         <div className={cn('rounded-lg', sizeClasses.padding, variantClasses.iconBg)}>
           <Icon className={cn(sizeClasses.iconSize, variantClasses.iconColor)} />
         </div>
+        {(trend || change) && (
+          <div className={cn(
+            'flex items-center gap-1 text-sm',
+            trend === 'up' ? 'text-emerald-600' : trend === 'down' ? 'text-red-600' : 'text-gray-600'
+          )}>
+            {trend === 'up' && <TrendingUp className="w-4 h-4" />}
+            {trend === 'down' && <TrendingDown className="w-4 h-4" />}
+            {change && <span>{change}</span>}
+          </div>
+        )}
+      </div>
+      <div>
+        <p className={cn(sizeClasses.titleSize, 'text-gray-600')}>{title}</p>
+        {value !== undefined && (
+          <p className={cn(sizeClasses.valueSize, 'mt-1')}>
+            {value}
+          </p>
+        )}
+        {subtitle && (
+          <p className={cn(sizeClasses.subtitleSize, 'text-gray-500 mt-1')}>{subtitle}</p>
+        )}
       </div>
     </Card>
   );

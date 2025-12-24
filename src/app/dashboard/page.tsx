@@ -4,10 +4,12 @@ import { TrendingUp, TrendingDown, DollarSign, Users, CreditCard, Activity } fro
 import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ColumnDef } from '@tanstack/react-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { DataTable } from '@/src/components/custom/DataTable';
+import { DataTable } from '@/src/components/dataTable/dataTable';
 import { StatusBadge } from '@/src/components/custom/StatusBadge';
 import { Transaction } from '@/src/types';
 import { use } from 'react';
+import { SectionCard } from '@/src/components/custom/sectionCard';
+import { StatCard } from '@/src/components/custom/statCard';
 
 const stats = [
   {
@@ -108,114 +110,75 @@ const recentTransactionColumns: ColumnDef<Transaction>[] = [
   },
 ];
 
-export default function Dashboard() {
+export default function Overview() {
   return (
     <div className="space-y-6">
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          const colorClasses = {
-            emerald: 'bg-emerald-100 text-emerald-600',
-            blue: 'bg-blue-100 text-blue-600',
-            purple: 'bg-purple-100 text-purple-600',
-            orange: 'bg-orange-100 text-orange-600',
-          }[stat.color];
-
-          return (
-            <Card key={stat.name}>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${colorClasses}`}>
-                    <Icon className="w-6 h-6" />
-                  </div>
-                  <div className={`flex items-center gap-1 text-sm ${
-                    stat.trend === 'up' ? 'text-emerald-600' : 'text-red-600'
-                  }`}>
-                    {stat.trend === 'up' ? (
-                      <TrendingUp className="w-4 h-4" />
-                    ) : (
-                      <TrendingDown className="w-4 h-4" />
-                    )}
-                    {stat.change}
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <p className="text-gray-600 text-sm">{stat.name}</p>
-                  <p className="text-2xl mt-1">{stat.value}</p>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+        {stats.map((stat) => (
+          <StatCard
+            key={stat.name}
+            title={stat.name}
+            value={stat.value}
+            icon={stat.icon}
+            variant={stat.color as 'emerald' | 'blue' | 'purple' | 'orange'}
+            trend={stat.trend as 'up' | 'down'}
+            change={stat.change}
+            size="medium"
+          />
+        ))}
       </div>
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Revenue Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Revenue vs Expenses</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={revenueData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" stroke="#888" />
-                <YAxis stroke="#888" />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2} name="Revenue" />
-                <Line type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={2} name="Expenses" />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <SectionCard title="Revenue vs Expenses">
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={revenueData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="month" stroke="#888" />
+              <YAxis stroke="#888" />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2} name="Revenue" />
+              <Line type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={2} name="Expenses" />
+            </LineChart>
+          </ResponsiveContainer>
+        </SectionCard>
 
         {/* Transaction Types Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Transaction Types Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={transactionTypes}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {transactionTypes.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <SectionCard title="Transaction Types Distribution">
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={transactionTypes}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                outerRadius={100}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {transactionTypes.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </SectionCard>
       </div>
 
       {/* Recent Transactions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DataTable
-            columns={recentTransactionColumns}
-            data={recentTransactions}
-            showPagination={false}
-            emptyMessage="No recent transactions"
-          />
-        </CardContent>
-      </Card>
+      <SectionCard title="Recent Transactions">
+        <DataTable
+          columns={recentTransactionColumns}
+          data={recentTransactions}
+          showPagination={false}
+        />
+      </SectionCard>
     </div>
   );
 }
