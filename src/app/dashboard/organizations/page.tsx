@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Building2, MapPin, Users, DollarSign, TrendingUp, Edit, Trash2, LogIn } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import { CardDescription, CardTitle } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
 import { Badge } from '@/src/components/ui/badge';
 import { ImageWithFallback } from '@/src/components/custom/imageWithFallback';
@@ -11,115 +11,158 @@ import { PageHeader } from '@/src/components/custom/pageHeader';
 import { StatsCard } from '@/src/components/custom/statsCard';
 import { EmptyState } from '@/src/components/custom/emptyState';
 import { StatusBadge } from '@/src/components/custom/StatusBadge';
-import { FormWrapper, FormInput, FormTextarea, FormSelect } from '@/src/components/custom';
-import { OkaneSpecialsSchema, OkaneSpecialsFormData } from '@/src/schema';
+import { SectionCard } from '@/src/components/custom/sectionCard';
+import { OkaneSpecialsFormData } from '@/src/schema';
 import { toast } from 'react-toastify';
+import OrganizationForm from './orgForm';
 
 interface Company {
   id: string;
+  _id?: string;
+  org_id?: string;
   name: string;
-  description: string;
-  image: string;
+  description?: string;
+  image?: string;
   location: string;
-  employees: number;
-  revenue: string;
-  status: 'Active' | 'Pending' | 'Inactive';
+  employees?: number;
+  revenue?: string;
+  status: 'Active' | 'Inactive';
   category: string;
+  email: string;
+  phone: string;
+  country: string;
 }
 
-export const initialCompanies: Company[] = [
-  {
-    id: '1',
-    name: 'TechVision Corp',
-    description: 'Leading technology solutions provider specializing in enterprise software and cloud services.',
-    image: 'https://images.unsplash.com/photo-1694702740570-0a31ee1525c7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBvZmZpY2UlMjBidWlsZGluZ3xlbnwxfHx8fDE3NjU2MjQ4Mjh8MA&ixlib=rb-4.1.0&q=80&w=1080',
-    location: 'San Francisco, CA',
-    employees: 250,
-    revenue: '$45M',
-    status: 'Active',
-    category: 'Technology',
-  },
-  {
-    id: '2',
-    name: 'Global Finance Partners',
-    description: 'Investment and financial services firm with a focus on sustainable growth and innovation.',
-    image: 'https://images.unsplash.com/photo-1702047135360-e549c2e1f7df?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWNoJTIwc3RhcnR1cCUyMHdvcmtzcGFjZXxlbnwxfHx8fDE3NjU3MDU0MzV8MA&ixlib=rb-4.1.0&q=80&w=1080',
-    location: 'New York, NY',
-    employees: 180,
-    revenue: '$32M',
-    status: 'Active',
-    category: 'Finance',
-  },
-  {
-    id: '3',
-    name: 'Innovative Solutions Ltd',
-    description: 'Consulting firm delivering strategic business solutions across multiple industries.',
-    image: 'https://images.unsplash.com/photo-1765351772260-9c7ddabe6977?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb3Jwb3JhdGUlMjBoZWFkcXVhcnRlcnN8ZW58MXx8fHwxNzY1NzEyNzE5fDA&ixlib=rb-4.1.0&q=80&w=1080',
-    location: 'London, UK',
-    employees: 120,
-    revenue: '$28M',
-    status: 'Active',
-    category: 'Consulting',
-  },
-  {
-    id: '4',
-    name: 'Urban Development Co',
-    description: 'Real estate development company focused on sustainable urban projects.',
-    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMGNlbnRlcnxlbnwxfHx8fDE3NjU2Mzk5MzF8MA&ixlib=rb-4.1.0&q=80&w=1080',
-    location: 'Dubai, UAE',
-    employees: 95,
-    revenue: '$52M',
-    status: 'Pending',
-    category: 'Real Estate',
-  },
-];
+// interface ApiResponse {
+//   success: boolean;
+//   data: any[];
+//   meta: {
+//     page: number;
+//     limit: number;
+//     total: number;
+//     totalPages: number;
+//     hasNext: boolean;
+//     hasPrev: boolean;
+//   };
+// }
 
 const statusOptions = [
   { value: 'Active', label: 'Active' },
-  { value: 'Pending', label: 'Pending' },
   { value: 'Inactive', label: 'Inactive' },
 ];
 
 export default function OkaneSpecials() {
   const router = useRouter();
-  const [companies, setCompanies] = useState<Company[]>(initialCompanies);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch organizations from API
+  const fetchOrganizations = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch('/api/organization');
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error:', response.status, errorText);
+        throw new Error(`Failed to fetch organizations: ${response.status} ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        const transformedData: Company[] = result.data.map((org: any) => ({
+          id: org._id,
+          _id: org._id,
+          org_id: org.org_id,
+          name: org.name,
+          description: org.description,
+          image: org.image || '', // Ensure empty string instead of undefined/null
+          location: org.location,
+          employees: org.employees,
+          revenue: org.revenue,
+          status: org.status,
+          category: org.category,
+          email: org.email,
+          phone: org.phone,
+          country: org.country,
+        }));  
+        setCompanies(transformedData);
+      } else {
+        setCompanies([]);
+      }
+    } catch (err) {
+      console.error('Error fetching organizations:', err);
+      setError('Failed to load organizations');
+      toast.error('Failed to load organizations');
+      setCompanies([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchOrganizations();
+  }, []);
 
   const handleSubmit = async (data: OkaneSpecialsFormData) => {
-    if (editingCompany) {
-      // Update existing company
-      setCompanies(prev => prev.map(c => 
-        c.id === editingCompany.id 
-          ? { ...c, ...data } 
-          : c
-      ));
-      toast.success('Organization updated successfully!');
-    } else {
-      // Add new company
-      const newCompany: Company = {
-        id: (companies.length + 1).toString(),
-        name: data.name,
-        description: data.description,
-        image: data.image || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMGNlbnRlcnxlbnwxfHx8fDE3NjU2Mzk5MzF8MA&ixlib=rb-4.1.0&q=80&w=1080',
-        location: data.location,
-        employees: data.employees,
-        revenue: data.revenue,
-        status: data.status,
-        category: data.category,
-      };
-      setCompanies(prev => [...prev, newCompany]);
-      toast.success('Organization added successfully!');
+    try {
+      const isEditing = !!editingCompany;
+      const url = isEditing ? `/api/organization/${editingCompany.id}` : '/api/organization';
+      const method = isEditing ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      // Handle validation errors from backend (422)
+      if (response.status === 422) {
+        const errorData = await response.json();
+        console.log('Backend validation errors:', errorData);
+        
+        // Show only one consolidated error message
+        if (errorData?.message) {
+          toast.error(errorData.message);
+        } else {
+          toast.error('Please check your form data and fix the validation errors.');
+        }
+        return;
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to save organization');
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success(result.message || (editingCompany ? 'Organization updated successfully!' : 'Organization added successfully!'));
+
+        // Refresh the data from API
+        await fetchOrganizations();
+
+        setIsAddDialogOpen(false);
+        setEditingCompany(undefined);
+      } else {
+        throw new Error(result.message || 'Failed to save organization');
+      }
+    } catch (error: any) {
+      console.error('Submit error:', error);
+      toast.error(error.message || 'Failed to save organization. Please try again.');
     }
-    
-    setIsAddDialogOpen(false);
-    setEditingCompany(undefined);
   };
 
-  const handleDelete = (id: string) => {
-    setCompanies(prev => prev.filter(company => company.id !== id));
-    toast.success('Organization deleted successfully!');
-  };
+
 
   const handleEdit = (company: Company) => {
     setEditingCompany(company);
@@ -175,10 +218,26 @@ export default function OkaneSpecials() {
       </div>
 
       {/* Companies Grid */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {loading ? (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="bg-gray-200 rounded-lg h-80"></div>
+            </div>
+          ))}
+        </div>
+      ) : error ? (
+        <div className="py-12 text-center">
+          <p className="mb-4 text-red-600">{error}</p>
+          <Button onClick={fetchOrganizations} variant="outline">
+            Retry
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {companies.map((company) => (
-          <Card key={company.id} className="overflow-hidden transition-shadow hover:shadow-lg">
-            <div className="relative w-full h-48 overflow-hidden bg-gray-200">
+          <SectionCard key={company.id} className="overflow-hidden transition-shadow hover:shadow-lg">
+            <div className="relative w-full h-48 mb-4 -mx-6 -mt-6 overflow-hidden bg-gray-200">
               <ImageWithFallback
                 src={company.image}
                 alt={company.name}
@@ -189,11 +248,11 @@ export default function OkaneSpecials() {
                 className="absolute top-4 right-4"
               />
             </div>
-            <CardHeader>
-              <CardTitle>{company.name}</CardTitle>
-              <CardDescription className="line-clamp-2">{company.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            <div className="space-y-4">
+              <div>
+                <CardTitle>{company.name}</CardTitle>
+                <CardDescription className="line-clamp-2">{company.description}</CardDescription>
+              </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <MapPin className="w-4 h-4" />
@@ -216,7 +275,7 @@ export default function OkaneSpecials() {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  router.push(`/dashboard/organizations/${company.id}`);
+                  router.push(`/dashboard/organizations/${company.org_id}`);
                 }}
               >
                 <LogIn className="w-4 h-4 mr-2" />
@@ -232,19 +291,13 @@ export default function OkaneSpecials() {
                   <Edit className="w-4 h-4 mr-1" />
                   Edit
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => handleDelete(company.id)}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </SectionCard>
         ))}
-      </div>
+        </div>
+      )}
 
       {companies.length === 0 && (
         <EmptyState
@@ -263,106 +316,13 @@ export default function OkaneSpecials() {
         />
       )}
 
-      {/* Organization Form Dialog */}
-      <FormWrapper
-        open={isAddDialogOpen}
-        onOpenChange={(open) => {
-          setIsAddDialogOpen(open);
-          if (!open) setEditingCompany(undefined);
-        }}
-        entityName="Organization"
-        schema={OkaneSpecialsSchema}
-        defaultValues={{
-          name: '',
-          description: '',
-          image: '',
-          location: '',
-          employees: 0,
-          revenue: '',
-          status: 'Active',
-          category: '',
-        }}
-        initialData={editingCompany ? {
-          name: editingCompany.name,
-          description: editingCompany.description,
-          category: editingCompany.category,
-          location: editingCompany.location,
-          employees: editingCompany.employees,
-          revenue: editingCompany.revenue,
-          status: editingCompany.status,
-          image: editingCompany.image,
-        } : undefined}
+      <OrganizationForm
+        isOpen={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        organization={editingCompany}
+        mode={editingCompany ? 'edit' : 'create'}
         onSubmit={handleSubmit}
-        className="sm:max-w-2xl"
-      >
-        {(form) => (
-          <>
-            <FormInput
-              control={form.control}
-              name="name"
-              label="Company Name"
-              placeholder="Enter company name"
-            />
-
-            <FormTextarea
-              control={form.control}
-              name="description"
-              label="Description"
-              placeholder="Enter company description"
-              rows={4}
-            />
-
-            <FormInput
-              control={form.control}
-              name="category"
-              label="Category"
-              placeholder="e.g., Technology, Finance, Real Estate"
-            />
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormInput
-                control={form.control}
-                name="location"
-                label="Location"
-                placeholder="e.g., New York, NY"
-              />
-
-              <FormInput
-                control={form.control}
-                name="employees"
-                label="Number of Employees"
-                type="number"
-                placeholder="e.g., 150"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormInput
-                control={form.control}
-                name="revenue"
-                label="Annual Revenue"
-                placeholder="e.g., $45M"
-              />
-
-              <FormSelect
-                control={form.control}
-                name="status"
-                label="Status"
-                options={statusOptions}
-              />
-            </div>
-
-            <FormInput
-              control={form.control}
-              name="image"
-              label="Image URL (Optional)"
-              type="url"
-              placeholder="https://example.com/image.jpg"
-              description="Leave empty to use default image"
-            />
-          </>
-        )}
-      </FormWrapper>
+      />
     </div>
   );
 }

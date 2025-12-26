@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { Organization } from "@/src/model/organization.model";
 import { connectDB } from "@/src/lib/db";
+import { validateBody } from "@/src/lib/validate";
+import { organizationCreateSchema } from "@/src/validators/organization.schema";
 
 // UPDATE ORGANIZATION
 export async function PUT(req: Request, context: { params: any }) {
@@ -9,34 +11,21 @@ export async function PUT(req: Request, context: { params: any }) {
     await connectDB();
     // In Next.js app routes, `context.params` may be a Promise — unwrap it before use
     const params = await context.params;
-    const {
-      org_id,
-      name,
-      code,
-      industry,
-      email,
-      phone,
-      address,
-      country,
-      timezone,
-      status,
-    } = await req.json();
-
     const id = params.id ?? params._id;
+
+    // ✅ Validate request body
+    const result = await validateBody(req, organizationCreateSchema);
+    if (!result.ok) return result.res;
 
     const organization = await Organization.findByIdAndUpdate(
       id,
       {
-        org_id,
-        name,
-        code,
-        industry,
-        email,
-        phone,
-        address,
-        country,
-        timezone,
-        status: status?.toLowerCase(),
+        ...result.data,
+        status: result.data.status || "Active",
+        code: result.data.code || result.data.name?.substring(0, 3).toUpperCase(),
+        industry: result.data.industry || result.data.category,
+        address: result.data.address || result.data.location,
+        timezone: result.data.timezone || "UTC",
       },
       { new: true, runValidators: true }
     );
@@ -60,33 +49,24 @@ export async function PUT(req: Request, context: { params: any }) {
       { status: 200 }
     );
   } catch (error: any) {
-    console.error("Error updating organization:", error);
-
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to update organization",
-        error: error.message,
+        message: error.message,
       },
       { status: 500 }
     );
   }
 }
 
-
-
-type Params = { params: { id: string } };
-
-/**
- * GET /api/organization/[id] - Fetch organization by org_id (e.g. org_1)
- */
-export async function GET(_req: Request, { params }: Params) {
+// DELETE ORGANIZATION
+export async function DELETE(req: Request, context: { params: any }) {
   try {
     await connectDB();
+    const params = await context.params;
+    const id = params.id ?? params._id;
 
-    const { id } = params; // id = "org_1"
-
-    const organization = await Organization.findOne({ org_id: id });
+    const organization = await Organization.findByIdAndDelete(id);
 
     if (!organization) {
       return NextResponse.json(
@@ -101,17 +81,18 @@ export async function GET(_req: Request, { params }: Params) {
     return NextResponse.json(
       {
         success: true,
+        message: "Organization deleted successfully",
         data: organization,
       },
       { status: 200 }
     );
-  } catch (err: any) {
+  } catch (error: any) {
     return NextResponse.json(
       {
         success: false,
-        message: err.message,
+        message: error.message,
       },
-      { status: 400 }
+      { status: 500 }
     );
   }
 }

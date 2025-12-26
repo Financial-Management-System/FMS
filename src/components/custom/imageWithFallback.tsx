@@ -12,7 +12,10 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
 
   const { src, alt, style, className, ...rest } = props
 
-  return didError ? (
+  // Show fallback immediately if src is empty/null/undefined
+  const shouldShowFallback = didError || !src || src.trim() === '';
+
+  return shouldShowFallback ? (
     <div
       className={`inline-block bg-gray-100 text-center align-middle ${className ?? ''}`}
       style={style}
