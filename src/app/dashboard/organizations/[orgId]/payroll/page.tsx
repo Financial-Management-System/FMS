@@ -3,29 +3,14 @@
 import { useState } from 'react';
 import { Card } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
-import { Users, Plus, Edit, Trash2, DollarSign, Calendar, Building, User, Briefcase, CheckCircle, Clock } from 'lucide-react';
-import { ColumnDef } from '@tanstack/react-table';
+import { Users, Plus, DollarSign, Calendar, Clock } from 'lucide-react';
 import FormDialog from '@/src/components/custom/formDialog';
 import { z } from 'zod';
 import { payrollSchema } from '@/src/schema';
 import { DataTable } from '@/src/components/dataTable/dataTable';
 import { StatCard } from '@/src/components/custom/statCard';
-import { StatusBadge } from '@/src/components/custom/StatusBadge';
+import { Payroll, createPayrollColumns } from './columns';
 
-interface Payroll {
-  id: string;
-  employeeName: string;
-  employeeId: string;
-  position: string;
-  department: string;
-  baseSalary: number;
-  bonus?: number;
-  deductions?: number;
-  payPeriod: string;
-  paymentDate: string;
-  status: 'Paid' | 'Pending' | 'Scheduled';
-}
 
 const mockPayroll: Payroll[] = [
   {
@@ -125,6 +110,7 @@ export default function OrgPayroll() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingPayroll, setEditingPayroll] = useState<Payroll | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('All');
+  
 
   const calculateNetPay = (payroll: Payroll) => {
     return payroll.baseSalary + (payroll.bonus || 0) - (payroll.deductions || 0);
@@ -170,155 +156,12 @@ export default function OrgPayroll() {
   const scheduledPayroll = payrolls.filter(p => p.status === 'Scheduled').reduce((sum, p) => sum + calculateNetPay(p), 0);
   const pendingPayroll = payrolls.filter(p => p.status === 'Pending').reduce((sum, p) => sum + calculateNetPay(p), 0);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Paid': return 'bg-emerald-100 text-emerald-800';
-      case 'Scheduled': return 'bg-blue-100 text-blue-800';
-      case 'Pending': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'Paid': return <CheckCircle className="w-4 h-4" />;
-      case 'Scheduled': return <Calendar className="w-4 h-4" />;
-      case 'Pending': return <Clock className="w-4 h-4" />;
-      default: return <Clock className="w-4 h-4" />;
-    }
-  };
-
-  const columns: ColumnDef<Payroll>[] = [
-    {
-      accessorKey: 'employeeName',
-      header: 'Employee',
-      cell: ({ row }) => (
-        <div>
-          <p className="text-sm">{row.getValue('employeeName')}</p>
-          <p className="text-xs text-gray-500">{row.original.position}</p>
-        </div>
-      )
-    },
-    {
-      accessorKey: 'employeeId',
-      header: 'Employee ID',
-      cell: ({ row }) => (
-        <span className="text-sm text-gray-600">{row.getValue('employeeId')}</span>
-      )
-    },
-    {
-      accessorKey: 'department',
-      header: 'Department',
-      cell: ({ row }) => (
-        <span className="text-sm text-gray-600">{row.getValue('department')}</span>
-      )
-    },
-    {
-      accessorKey: 'baseSalary',
-      header: 'Base Salary',
-      cell: ({ row }) => (
-        <span className="text-sm text-gray-600">${(row.getValue('baseSalary') as number).toLocaleString()}</span>
-      )
-    },
-    {
-      accessorKey: 'bonus',
-      header: 'Bonus',
-      cell: ({ row }) => {
-        const bonus = row.getValue('bonus') as number | undefined;
-        return bonus ? (
-          <span className="text-sm text-emerald-600">+${bonus.toLocaleString()}</span>
-        ) : (
-          <span className="text-xs text-gray-400">—</span>
-        );
-      }
-    },
-    {
-      accessorKey: 'deductions',
-      header: 'Deductions',
-      cell: ({ row }) => {
-        const deductions = row.getValue('deductions') as number | undefined;
-        return deductions ? (
-          <span className="text-sm text-red-600">-${deductions.toLocaleString()}</span>
-        ) : (
-          <span className="text-xs text-gray-400">—</span>
-        );
-      }
-    },
-    {
-      id: 'netPay',
-      header: 'Net Pay',
-      cell: ({ row }) => {
-        const netPay = calculateNetPay(row.original);
-        return (
-          <div>
-            <p className="text-sm text-emerald-600">${netPay.toLocaleString()}</p>
-          </div>
-        );
-      }
-    },
-    {
-      accessorKey: 'payPeriod',
-      header: 'Pay Period',
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-gray-400" />
-          <p className="text-sm text-gray-900">{row.getValue('payPeriod')}</p>
-        </div>
-      )
-    },
-    {
-      accessorKey: 'paymentDate',
-      header: 'Payment Date',
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-gray-400" />
-          <p className="text-sm text-gray-900">{row.getValue('paymentDate')}</p>
-        </div>
-      )
-    },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => (
-        <StatusBadge status={row.getValue('status')} />
-      )
-    },
-    {
-      header: 'Actions',
-      cell: ({ row }) => {
-        const payroll = row.original;
-        return (
-          <div className="flex gap-2">
-            {(payroll.status === 'Pending' || payroll.status === 'Scheduled') && (
-              <Button
-                size="sm"
-                className="bg-emerald-600 hover:bg-emerald-700"
-                onClick={() => handleProcessPayment(payroll.id)}
-              >
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Process
-              </Button>
-            )}
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setEditingPayroll(payroll)}
-            >
-              <Edit className="w-4 h-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="text-red-600 hover:bg-red-50"
-              onClick={() => handleDelete(payroll.id)}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
-        );
-      }
-    }
-  ];
+  const columns = createPayrollColumns(
+    calculateNetPay,
+    handleProcessPayment,
+    setEditingPayroll,
+    handleDelete
+  );
 
   return (
     <div className="space-y-6">
@@ -363,6 +206,7 @@ export default function OrgPayroll() {
           size="medium"
         />
       </div>
+
 
       {/* Filters */}
       <div className="flex gap-2">
