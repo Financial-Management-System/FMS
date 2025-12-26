@@ -32,8 +32,8 @@ const generateTransactions = (): Transaction[] => {
     { name: 'Patricia White', email: 'patricia@example.com' },
   ];
 
-  const types = ['Deposit', 'Withdrawal', 'Transfer', 'Payment'];
-  const statuses = ['Completed', 'Pending', 'Failed'];
+  const types = ['Deposit', 'Withdrawal', 'Transfer', 'Payment'] as const;
+  const statuses = ['Completed', 'Pending', 'Failed'] as const;
   const methods = ['Bank Transfer', 'Wire Transfer', 'Credit Card', 'Debit Card', 'Internal Transfer'];
 
   const transactions: Transaction[] = [];
