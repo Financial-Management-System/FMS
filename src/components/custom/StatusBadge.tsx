@@ -19,6 +19,11 @@ const statusStyles: Record<string, string> = {
   Enterprise: 'bg-purple-100 text-purple-700',
   Premium: 'bg-blue-100 text-blue-700',
   Standard: 'bg-gray-100 text-gray-700',
+
+  // Approval statuses
+  Approved: 'bg-emerald-100 text-emerald-700',
+  Rejected: 'bg-red-100 text-red-700',
+  'Under Review': 'bg-blue-100 text-blue-700',
 };
 
 export function StatusBadge({ status, variant = 'secondary', className }: StatusBadgeProps) {
