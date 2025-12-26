@@ -1,20 +1,28 @@
 "use client";
 
-import { useState } from 'react';
-import { Card } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { TrendingDown, Plus, DollarSign, Calendar } from 'lucide-react';
-import FormDialog from '@/src/components/custom/formDialog';
-import { z } from 'zod';
-import { expenseSchema } from '@/src/schema';
-import { DataTable } from '@/src/components/dataTable/dataTable';
-import { StatCard } from '@/src/components/custom/statCard';
-import { createColumns } from './columns';
+import { useState } from "react";
+import { Card } from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { TrendingDown, Plus, DollarSign, Calendar } from "lucide-react";
+import FormDialog from "@/src/components/custom/formDialog";
+import { z } from "zod";
+import { expenseSchema } from "@/src/schema";
+import { DataTable } from "@/src/components/dataTable/dataTable";
+import { StatCard } from "@/src/components/custom/statCard";
+import { createColumns } from "./columns";
+
 
 interface Expense {
   id: string;
   title: string;
-  category: 'Office' | 'Travel' | 'Equipment' | 'Software' | 'Marketing' | 'Utilities' | 'Other';
+  category:
+    | "Office"
+    | "Travel"
+    | "Equipment"
+    | "Software"
+    | "Marketing"
+    | "Utilities"
+    | "Other";
   amount: number;
   currency: string;
   department: string;
@@ -22,117 +30,165 @@ interface Expense {
   vendor: string;
   expenseDate: string;
   receiptNumber?: string;
-  status: 'Approved' | 'Pending' | 'Rejected';
+  status: "Approved" | "Pending" | "Rejected";
 }
 
 const mockExpenses: Expense[] = [
   {
-    id: '1',
-    title: 'Office Space Rent - December',
-    category: 'Office',
+    id: "1",
+    title: "Office Space Rent - December",
+    category: "Office",
     amount: 12000,
-    currency: 'USD',
-    department: 'Operations',
-    description: 'Monthly rent for 5000 sq ft office space in downtown',
-    vendor: 'Downtown Properties LLC',
-    expenseDate: '2025-12-01',
-    receiptNumber: 'RENT-2025-12',
-    status: 'Approved'
+    currency: "USD",
+    department: "Operations",
+    description: "Monthly rent for 5000 sq ft office space in downtown",
+    vendor: "Downtown Properties LLC",
+    expenseDate: "2025-12-01",
+    receiptNumber: "RENT-2025-12",
+    status: "Approved",
   },
   {
-    id: '2',
-    title: 'Team Laptops - Engineering',
-    category: 'Equipment',
+    id: "2",
+    title: "Team Laptops - Engineering",
+    category: "Equipment",
     amount: 15000,
-    currency: 'USD',
-    department: 'Engineering',
-    description: 'MacBook Pro laptops for 5 new engineering hires',
-    vendor: 'Apple Business',
-    expenseDate: '2025-12-10',
-    receiptNumber: 'ORD-89456',
-    status: 'Approved'
+    currency: "USD",
+    department: "Engineering",
+    description: "MacBook Pro laptops for 5 new engineering hires",
+    vendor: "Apple Business",
+    expenseDate: "2025-12-10",
+    receiptNumber: "ORD-89456",
+    status: "Approved",
   },
   {
-    id: '3',
-    title: 'Conference Travel - Tech Summit',
-    category: 'Travel',
+    id: "3",
+    title: "Conference Travel - Tech Summit",
+    category: "Travel",
     amount: 4500,
-    currency: 'USD',
-    department: 'Marketing',
-    description: 'Flights, hotel, and conference tickets for 3 team members',
-    vendor: 'Corporate Travel Agency',
-    expenseDate: '2025-12-08',
-    receiptNumber: 'TRV-2025-147',
-    status: 'Approved'
+    currency: "USD",
+    department: "Marketing",
+    description: "Flights, hotel, and conference tickets for 3 team members",
+    vendor: "Corporate Travel Agency",
+    expenseDate: "2025-12-08",
+    receiptNumber: "TRV-2025-147",
+    status: "Approved",
   },
   {
-    id: '4',
-    title: 'Cloud Infrastructure - AWS',
-    category: 'Software',
+    id: "4",
+    title: "Cloud Infrastructure - AWS",
+    category: "Software",
     amount: 8700,
-    currency: 'USD',
-    department: 'Engineering',
-    description: 'Monthly AWS hosting and infrastructure costs',
-    vendor: 'Amazon Web Services',
-    expenseDate: '2025-12-05',
-    receiptNumber: 'AWS-INV-2025-12',
-    status: 'Approved'
+    currency: "USD",
+    department: "Engineering",
+    description: "Monthly AWS hosting and infrastructure costs",
+    vendor: "Amazon Web Services",
+    expenseDate: "2025-12-05",
+    receiptNumber: "AWS-INV-2025-12",
+    status: "Approved",
   },
   {
-    id: '5',
-    title: 'Digital Marketing Campaign',
-    category: 'Marketing',
+    id: "5",
+    title: "Digital Marketing Campaign",
+    category: "Marketing",
     amount: 22000,
-    currency: 'USD',
-    department: 'Marketing',
-    description: 'Q4 social media and search engine marketing campaigns',
-    vendor: 'Digital Marketing Pro',
-    expenseDate: '2025-12-11',
-    receiptNumber: 'DMP-INV-457',
-    status: 'Pending'
+    currency: "USD",
+    department: "Marketing",
+    description: "Q4 social media and search engine marketing campaigns",
+    vendor: "Digital Marketing Pro",
+    expenseDate: "2025-12-11",
+    receiptNumber: "DMP-INV-457",
+    status: "Pending",
   },
   {
-    id: '6',
-    title: 'Office Utilities - December',
-    category: 'Utilities',
+    id: "6",
+    title: "Office Utilities - December",
+    category: "Utilities",
     amount: 1850,
-    currency: 'USD',
-    department: 'Operations',
-    description: 'Electricity, water, and internet services',
-    vendor: 'City Utilities & Services',
-    expenseDate: '2025-12-13',
-    status: 'Approved'
-  }
+    currency: "USD",
+    department: "Operations",
+    description: "Electricity, water, and internet services",
+    vendor: "City Utilities & Services",
+    expenseDate: "2025-12-13",
+    status: "Approved",
+  },
 ];
 
 const formFields = [
-  { name: 'title' as const, label: 'Expense Title', type: 'text' as const, placeholder: 'e.g., Office Supplies' },
-  { 
-    name: 'category' as const, 
-    label: 'Category', 
-    type: 'select' as const, 
-    options: ['Office', 'Travel', 'Equipment', 'Software', 'Marketing', 'Utilities', 'Other'] 
+  {
+    name: "title" as const,
+    label: "Expense Title",
+    type: "text" as const,
+    placeholder: "e.g., Office Supplies",
   },
-  { name: 'amount' as const, label: 'Amount', type: 'number' as const, placeholder: '0.00' },
-  { name: 'currency' as const, label: 'Currency', type: 'text' as const, placeholder: 'USD' },
-  { name: 'department' as const, label: 'Department', type: 'text' as const, placeholder: 'Select department' },
-  { name: 'description' as const, label: 'Description', type: 'textarea' as const, placeholder: 'Detailed description' },
-  { name: 'vendor' as const, label: 'Vendor', type: 'text' as const, placeholder: 'Vendor or supplier name' },
-  { name: 'expenseDate' as const, label: 'Expense Date', type: 'text' as const, placeholder: 'YYYY-MM-DD' },
-  { name: 'receiptNumber' as const, label: 'Receipt Number (Optional)', type: 'text' as const, placeholder: 'RCP-XXX' },
+  {
+    name: "category" as const,
+    label: "Category",
+    type: "select" as const,
+    options: [
+      "Office",
+      "Travel",
+      "Equipment",
+      "Software",
+      "Marketing",
+      "Utilities",
+      "Other",
+    ],
+  },
+  {
+    name: "amount" as const,
+    label: "Amount",
+    type: "number" as const,
+    placeholder: "0.00",
+  },
+  {
+    name: "currency" as const,
+    label: "Currency",
+    type: "text" as const,
+    placeholder: "USD",
+  },
+  {
+    name: "department" as const,
+    label: "Department",
+    type: "text" as const,
+    placeholder: "Select department",
+  },
+  {
+    name: "description" as const,
+    label: "Description",
+    type: "textarea" as const,
+    placeholder: "Detailed description",
+  },
+  {
+    name: "vendor" as const,
+    label: "Vendor",
+    type: "text" as const,
+    placeholder: "Vendor or supplier name",
+  },
+  {
+    name: "expenseDate" as const,
+    label: "Expense Date",
+    type: "text" as const,
+    placeholder: "YYYY-MM-DD",
+  },
+  {
+    name: "receiptNumber" as const,
+    label: "Receipt Number (Optional)",
+    type: "text" as const,
+    placeholder: "RCP-XXX",
+  },
 ];
 
 export default function OrgExpenses() {
   const [expenses, setExpenses] = useState<Expense[]>(mockExpenses);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
-  const [filterCategory, setFilterCategory] = useState<string>('All');
+  const [filterCategory, setFilterCategory] = useState<string>("All");
 
   const handleAdd = (data: z.infer<typeof expenseSchema>) => {
     const newExpense: Expense = {
       id: Date.now().toString(),
       ...data,
-      status: 'Pending'
+      status: "Pending",
     };
     setExpenses([newExpense, ...expenses]);
     setIsAddOpen(false);
@@ -140,60 +196,89 @@ export default function OrgExpenses() {
 
   const handleEdit = (data: z.infer<typeof expenseSchema>) => {
     if (!editingExpense) return;
-    setExpenses(expenses.map(expense =>
-      expense.id === editingExpense.id
-        ? { ...expense, ...data }
-        : expense
-    ));
+    setExpenses(
+      expenses.map((expense) =>
+        expense.id === editingExpense.id ? { ...expense, ...data } : expense
+      )
+    );
     setEditingExpense(null);
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this expense?')) {
-      setExpenses(expenses.filter(expense => expense.id !== id));
+    if (confirm("Are you sure you want to delete this expense?")) {
+      setExpenses(expenses.filter((expense) => expense.id !== id));
     }
   };
 
-  const filteredExpenses = filterCategory === 'All' 
-    ? expenses 
-    : expenses.filter(expense => expense.category === filterCategory);
+  const filteredExpenses =
+    filterCategory === "All"
+      ? expenses
+      : expenses.filter((expense) => expense.category === filterCategory);
 
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const approvedExpenses = expenses.filter(e => e.status === 'Approved').reduce((sum, e) => sum + e.amount, 0);
-  const pendingExpenses = expenses.filter(e => e.status === 'Pending').reduce((sum, e) => sum + e.amount, 0);
+  const totalExpenses = expenses.reduce(
+    (sum, expense) => sum + expense.amount,
+    0
+  );
+  const approvedExpenses = expenses
+    .filter((e) => e.status === "Approved")
+    .reduce((sum, e) => sum + e.amount, 0);
+  const pendingExpenses = expenses
+    .filter((e) => e.status === "Pending")
+    .reduce((sum, e) => sum + e.amount, 0);
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'Office': return 'bg-blue-100 text-blue-800';
-      case 'Travel': return 'bg-purple-100 text-purple-800';
-      case 'Equipment': return 'bg-orange-100 text-orange-800';
-      case 'Software': return 'bg-cyan-100 text-cyan-800';
-      case 'Marketing': return 'bg-pink-100 text-pink-800';
-      case 'Utilities': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "Office":
+        return "bg-blue-100 text-blue-800";
+      case "Travel":
+        return "bg-purple-100 text-purple-800";
+      case "Equipment":
+        return "bg-orange-100 text-orange-800";
+      case "Software":
+        return "bg-cyan-100 text-cyan-800";
+      case "Marketing":
+        return "bg-pink-100 text-pink-800";
+      case "Utilities":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Approved': return 'bg-emerald-100 text-emerald-800';
-      case 'Pending': return 'bg-yellow-100 text-yellow-800';
-      case 'Rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "Approved":
+        return "bg-emerald-100 text-emerald-800";
+      case "Pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "Rejected":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
-  const columns = createColumns({ setEditingExpense, handleDelete, getCategoryColor });
+  const columns = createColumns({
+    setEditingExpense,
+    handleDelete,
+    getCategoryColor,
+  });
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-start">
+        
         <div>
           <h2 className="text-2xl text-gray-900">Expenses</h2>
-          <p className="text-gray-600 mt-1">Track and categorize business expenses</p>
+          <p className="text-gray-600 mt-1">
+            Track and categorize business expenses
+          </p>
         </div>
-        <Button onClick={() => setIsAddOpen(true)} className="bg-emerald-600 hover:bg-emerald-700">
+        <Button
+          onClick={() => setIsAddOpen(true)}
+          className="bg-emerald-600 hover:bg-emerald-700"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Add Expense
         </Button>
@@ -213,7 +298,9 @@ export default function OrgExpenses() {
         <StatCard
           title="Approved"
           value={`$${approvedExpenses.toLocaleString()}`}
-          subtitle={`${expenses.filter(e => e.status === 'Approved').length} expenses`}
+          subtitle={`${
+            expenses.filter((e) => e.status === "Approved").length
+          } expenses`}
           icon={DollarSign}
           variant="emerald"
           size="medium"
@@ -222,23 +309,35 @@ export default function OrgExpenses() {
         <StatCard
           title="Pending Approval"
           value={`$${pendingExpenses.toLocaleString()}`}
-          subtitle={`${expenses.filter(e => e.status === 'Pending').length} awaiting`}
+          subtitle={`${
+            expenses.filter((e) => e.status === "Pending").length
+          } awaiting`}
           icon={Calendar}
           variant="yellow"
           size="medium"
         />
       </div>
 
+
       {/* Filters */}
       <div className="flex gap-2 flex-wrap">
-        {['All', 'Office', 'Travel', 'Equipment', 'Software', 'Marketing', 'Utilities', 'Other'].map((category) => (
+        {[
+          "All",
+          "Office",
+          "Travel",
+          "Equipment",
+          "Software",
+          "Marketing",
+          "Utilities",
+          "Other",
+        ].map((category) => (
           <button
             key={category}
             onClick={() => setFilterCategory(category)}
             className={`px-4 py-2 rounded-lg text-sm transition-colors ${
               filterCategory === category
-                ? 'bg-emerald-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? "bg-emerald-600 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
           >
             {category}
@@ -293,7 +392,7 @@ export default function OrgExpenses() {
             description: editingExpense.description,
             vendor: editingExpense.vendor,
             expenseDate: editingExpense.expenseDate,
-            receiptNumber: editingExpense.receiptNumber || '',
+            receiptNumber: editingExpense.receiptNumber || "",
           }}
           submitLabel="Update Expense"
         />
