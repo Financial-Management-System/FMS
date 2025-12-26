@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -47,7 +47,6 @@ import {
   ResponsiveContainer,
   Legend 
 } from 'recharts';
-import { initialCompanies } from '../page';
 import { StatCard } from '@/src/components/custom';
 import { SectionCard } from '@/src/components/custom/sectionCard';
 
@@ -146,10 +145,28 @@ export default function OrganizationDashboard() {
   const router = useRouter();
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [orgName, setOrgName] = useState('');
   
   const orgId = params.orgId as string;
-  // Get organization name from localStorage or state (in real app, fetch from API)
-  const orgName = initialCompanies.find(c => c.id === orgId)?.name ?? `Organization ${orgId}`;
+
+  useEffect(() => {
+    const fetchOrganization = async () => {
+      try {
+        const response = await fetch(`/api/organization/${orgId}`);
+        if (response.ok) {
+          const org = await response.json();
+          setOrgName(org.name);
+        }
+      } catch (error) {
+        console.error('Error fetching organization:', error);
+        setOrgName(`Organization ${orgId}`);
+      }
+    };
+
+    if (orgId) {
+      fetchOrganization();
+    }
+  }, [orgId]);
 
   const isActivePath = (href: string) => {
     const basePath = `/dashboard/organizations/${orgId}`;
