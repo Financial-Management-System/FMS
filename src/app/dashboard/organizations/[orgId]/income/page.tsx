@@ -12,6 +12,7 @@ import { DataTable } from '@/src/components/dataTable/dataTable';
 import { StatCard } from '@/src/components/custom/statCard';
 import { StatusBadge } from '@/src/components/custom/StatusBadge';
 import { createColumns, Income } from './columns';
+import ViewIncomeDialog from './viewIncomeDialog';
 
 const mockIncome: Income[] = [
   {
@@ -95,6 +96,7 @@ export default function OrgIncome() {
   const [incomes, setIncomes] = useState<Income[]>(mockIncome);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
+  const [viewingIncome, setViewingIncome] = useState<Income | null>(null);
   const [filterCategory, setFilterCategory] = useState<string>('All');
 
   const handleAdd = (data: z.infer<typeof incomeSchema>) => {
@@ -123,6 +125,10 @@ export default function OrgIncome() {
     }
   };
 
+  const handleView = (income: Income) => {
+    setViewingIncome(income);
+  };
+
   const filteredIncomes = filterCategory === 'All' 
     ? incomes 
     : incomes.filter(income => income.category === filterCategory);
@@ -131,7 +137,7 @@ export default function OrgIncome() {
   const receivedIncome = incomes.filter(i => i.status === 'Received').reduce((sum, i) => sum + i.amount, 0);
   const pendingIncome = incomes.filter(i => i.status === 'Pending').reduce((sum, i) => sum + i.amount, 0);
 
-  const columns = createColumns(setEditingIncome, handleDelete);
+  const columns = createColumns(setEditingIncome, handleDelete, handleView);
 
   return (
     <div className="space-y-6">
@@ -245,6 +251,13 @@ export default function OrgIncome() {
           submitLabel="Update Income"
         />
       )}
+
+      {/* View Income Dialog */}
+      <ViewIncomeDialog
+        open={!!viewingIncome}
+        onClose={() => setViewingIncome(null)}
+        income={viewingIncome}
+      />
     </div>
   );
 }
