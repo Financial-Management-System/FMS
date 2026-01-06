@@ -3,14 +3,11 @@
 import { useState } from 'react';
 import { Filter, Download, TrendingUp, AlertCircle, Clock, DollarSign } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
-import { Card, CardContent } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/src/components/ui/select';
 import { PageHeader } from '@/src/components/custom/pageHeader';
-import { StatsCard } from '@/src/components/custom/statsCard';
-import { SearchBar } from '@/src/components/custom/searchBar';
 import { StatusBadge } from '@/src/components/custom/StatusBadge';
 import { DataTable } from '@/src/components/dataTable/dataTable';
+import { DataTableFilter } from '@/src/components/dataTable/dataTableFilter';
 import { Transaction } from '@/src/types';
 import { SectionCard } from '@/src/components/custom/sectionCard';
 import { StatCard } from '@/src/components/custom/statCard';
@@ -69,6 +66,14 @@ export const transactionColumns: ColumnDef<Transaction>[] = [
     cell: ({ row }) => (
       <span className="text-emerald-600">{row.getValue('id')}</span>
     ),
+    filterFn: (row, id, value) => {
+      const searchValue = value.toLowerCase();
+      return (
+        row.getValue(id).toString().toLowerCase().includes(searchValue) ||
+        row.original.user.toLowerCase().includes(searchValue) ||
+        row.original.email.toLowerCase().includes(searchValue)
+      );
+    },
   },
   {
     accessorKey: 'user',
@@ -127,25 +132,59 @@ export const transactionColumns: ColumnDef<Transaction>[] = [
 ];
 
 export default function Transactions() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
-  const [typeFilter, setTypeFilter] = useState('All');
+  const [table, setTable] = useState<any>(null);
 
-  const filteredTransactions = allTransactions.filter((transaction) => {
-    const matchesSearch =
-      transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.email.toLowerCase().includes(searchTerm.toLowerCase());
+  const getFilteredData = () => {
+    if (!table) return allTransactions;
+    return table.getFilteredRowModel().rows.map((row: any) => row.original);
+  };
 
-    const matchesStatus = statusFilter === 'All' || transaction.status === statusFilter;
-    const matchesType = typeFilter === 'All' || transaction.type === typeFilter;
-
-    return matchesSearch && matchesStatus && matchesType;
-  });
-
+  const filteredTransactions = getFilteredData();
   const totalAmount = filteredTransactions.reduce((sum, t) => sum + t.amount, 0);
   const pendingCount = filteredTransactions.filter(t => t.status === 'Pending').length;
   const failedCount = filteredTransactions.filter(t => t.status === 'Failed').length;
+
+  const toolbar = (tableInstance: any) => (
+    <div className="flex flex-col lg:flex-row gap-4">
+      <DataTableFilter
+        table={tableInstance}
+        columnKey="id"
+        placeholder="Search by ID, user, or email..."
+        className="max-w-sm"
+      />
+      <StandaloneSelect
+        value={(tableInstance.getColumn('status')?.getFilterValue() as string) ?? 'All'}
+        onValueChange={(value) => 
+          tableInstance.getColumn('status')?.setFilterValue(value === 'All' ? '' : value)
+        }
+        placeholder="All Statuses"
+        options={[
+          { value: 'All', label: 'All Statuses' },
+          { value: 'Completed', label: 'Completed' },
+          { value: 'Pending', label: 'Pending' },
+          { value: 'Failed', label: 'Failed' },
+        ]}
+      />
+      <StandaloneSelect
+        value={(tableInstance.getColumn('type')?.getFilterValue() as string) ?? 'All'}
+        onValueChange={(value) => 
+          tableInstance.getColumn('type')?.setFilterValue(value === 'All' ? '' : value)
+        }
+        placeholder="All Types"
+        options={[
+          { value: 'All', label: 'All Types' },
+          { value: 'Deposit', label: 'Deposit' },
+          { value: 'Withdrawal', label: 'Withdrawal' },
+          { value: 'Transfer', label: 'Transfer' },
+          { value: 'Payment', label: 'Payment' },
+        ]}
+      />
+      <Button variant="outline">
+        <Filter className="w-4 h-4 mr-2" />
+        More Filters
+      </Button>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -190,54 +229,15 @@ export default function Transactions() {
         />
       </div>
 
-      {/* Filters */}
-      <SectionCard>
-        <div className="flex flex-col lg:flex-row gap-4">
-          <SearchBar
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder="Search by ID, user, or email..."
-          />
 
-          {/* Status Filter */}
-          <StandaloneSelect
-            value={statusFilter}
-            onValueChange={setStatusFilter}
-            placeholder="All Statuses"
-            options={[
-              { value: 'All', label: 'All Statuses' },
-              { value: 'Completed', label: 'Completed' },
-              { value: 'Pending', label: 'Pending' },
-              { value: 'Failed', label: 'Failed' },
-            ]}
-          />
-
-          {/* Type Filter */}
-          <StandaloneSelect
-            value={typeFilter}
-            onValueChange={setTypeFilter}
-            placeholder="All Types"
-            options={[
-              { value: 'All', label: 'All Types' },
-              { value: 'Deposit', label: 'Deposit' },
-              { value: 'Withdrawal', label: 'Withdrawal' },
-              { value: 'Transfer', label: 'Transfer' },
-              { value: 'Payment', label: 'Payment' },
-            ]}
-          />
-
-          <Button variant="outline">
-            <Filter className="w-4 h-4 mr-2" />
-            More Filters
-          </Button>
-        </div>
-      </SectionCard>
 
       {/* Transactions Table */}
       <SectionCard title="All Transactions">
         <DataTable
           columns={transactionColumns}
-          data={filteredTransactions}
+          data={allTransactions}
+          toolbar={toolbar}
+          getTableInstance={setTable}
           showPagination={true}
           paginationOptions={{
             pageSizeOptions: [10, 20, 30, 50],

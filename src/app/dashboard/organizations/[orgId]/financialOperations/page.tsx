@@ -3,10 +3,12 @@
 import { useState } from 'react';
 import { Card } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
-import { DollarSign, TrendingUp, TrendingDown, Activity, Plus, Download, FileText } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Activity, Plus, Download, FileText, Filter } from 'lucide-react';
 import { DataTable } from '@/src/components/dataTable/dataTable';
+import { DataTableFilter } from '@/src/components/dataTable/dataTableFilter';
 import { StatusBadge } from '@/src/components/custom/StatusBadge';
 import { StatCard } from '@/src/components/custom/statCard';
+import { StandaloneSelect } from '@/src/components/custom/standaloneSelect';
 import { Edit } from 'lucide-react';
 import { columns, FinancialOperation } from './columns';
 
@@ -197,23 +199,74 @@ const mockOperations: FinancialOperation[] = [
 export default function OrgFinancialOperations() {
   const [operations] = useState<FinancialOperation[]>(mockOperations);
   const [selectedOperation, setSelectedOperation] = useState<FinancialOperation | null>(null);
+  const [table, setTable] = useState<any>(null);
+
+  const getFilteredData = () => {
+    if (!table) return operations;
+    return table.getFilteredRowModel().rows.map((row: any) => row.original);
+  };
+
+  const filteredOperations = getFilteredData();
 
   // Calculate statistics
-  const totalIncome = operations
+  const totalIncome = filteredOperations
     .filter(op => op.type === 'Credit' && op.status === 'Completed')
     .reduce((sum, op) => sum + op.amount, 0);
 
-  const totalExpenses = operations
+  const totalExpenses = filteredOperations
     .filter(op => op.type === 'Debit' && op.status === 'Completed')
     .reduce((sum, op) => sum + op.amount, 0);
 
-  const pendingOperations = operations.filter(op => op.status === 'Pending').length;
+  const pendingOperations = filteredOperations.filter(op => op.status === 'Pending').length;
 
-  const processingAmount = operations
+  const processingAmount = filteredOperations
     .filter(op => op.status === 'Processing')
     .reduce((sum, op) => sum + op.amount, 0);
 
-  // No actions needed for now
+  const toolbar = (tableInstance: any) => (
+    <div className="flex flex-col lg:flex-row gap-4">
+      <DataTableFilter
+        table={tableInstance}
+        columnKey="operationId"
+        placeholder="Search operations..."
+        className="max-w-sm"
+      />
+      <StandaloneSelect
+        value={(tableInstance.getColumn('status')?.getFilterValue() as string) ?? 'All'}
+        onValueChange={(value) => 
+          tableInstance.getColumn('status')?.setFilterValue(value === 'All' ? '' : value)
+        }
+        placeholder="All Statuses"
+        options={[
+          { value: 'All', label: 'All Statuses' },
+          { value: 'Completed', label: 'Completed' },
+          { value: 'Pending', label: 'Pending' },
+          { value: 'Processing', label: 'Processing' },
+          { value: 'Failed', label: 'Failed' },
+        ]}
+      />
+      <StandaloneSelect
+        value={(tableInstance.getColumn('category')?.getFilterValue() as string) ?? 'All'}
+        onValueChange={(value) => 
+          tableInstance.getColumn('category')?.setFilterValue(value === 'All' ? '' : value)
+        }
+        placeholder="All Categories"
+        options={[
+          { value: 'All', label: 'All Categories' },
+          { value: 'Income', label: 'Income' },
+          { value: 'Expense', label: 'Expense' },
+          { value: 'Transfer', label: 'Transfer' },
+          { value: 'Investment', label: 'Investment' },
+          { value: 'Payroll', label: 'Payroll' },
+          { value: 'Tax', label: 'Tax' },
+        ]}
+      />
+      <Button variant="outline">
+        <Filter className="w-4 h-4 mr-2" />
+        More Filters
+      </Button>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -274,9 +327,16 @@ export default function OrgFinancialOperations() {
       <DataTable
         columns={columns}
         data={operations}
+        toolbar={toolbar}
+        getTableInstance={setTable}
         showPagination={true}
-        pageSize={10}
-        emptyMessage="No financial operations found"
+        paginationOptions={{
+          pageSizeOptions: [10, 20, 30, 50],
+          showRowsPerPage: true,
+          showFirstLastButtons: true,
+          showPageInfo: true,
+          showSelectedRows: false,
+        }}
       />
 
       {/* Operation Details Modal */}
