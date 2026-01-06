@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { Card } from "@/src/components/ui/card";
 import { Button } from "@/src/components/ui/button";
-import { TrendingDown, Plus, DollarSign, Calendar } from "lucide-react";
+import { TrendingDown, Plus, DollarSign, Calendar, Filter } from "lucide-react";
 import FormDialog from "@/src/components/custom/formDialog";
 import { z } from "zod";
 import { expenseSchema } from "@/src/schema";
 import { DataTable } from "@/src/components/dataTable/dataTable";
+import { DataTableFilter } from "@/src/components/dataTable/dataTableFilter";
 import { StatCard } from "@/src/components/custom/statCard";
+import { StandaloneSelect } from "@/src/components/custom/standaloneSelect";
 import { createColumns } from "./columns";
 
 
@@ -182,7 +184,14 @@ export default function OrgExpenses() {
   const [expenses, setExpenses] = useState<Expense[]>(mockExpenses);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
-  const [filterCategory, setFilterCategory] = useState<string>("All");
+  const [table, setTable] = useState<any>(null);
+
+  const getFilteredData = () => {
+    if (!table) return expenses;
+    return table.getFilteredRowModel().rows.map((row: any) => row.original);
+  };
+
+  const filteredExpenses = getFilteredData();
 
   const handleAdd = (data: z.infer<typeof expenseSchema>) => {
     const newExpense: Expense = {
@@ -210,21 +219,16 @@ export default function OrgExpenses() {
     }
   };
 
-  const filteredExpenses =
-    filterCategory === "All"
-      ? expenses
-      : expenses.filter((expense) => expense.category === filterCategory);
-
-  const totalExpenses = expenses.reduce(
-    (sum, expense) => sum + expense.amount,
+  const totalExpenses = filteredExpenses.reduce(
+    (sum: number, expense: Expense) => sum + expense.amount,
     0
   );
-  const approvedExpenses = expenses
-    .filter((e) => e.status === "Approved")
-    .reduce((sum, e) => sum + e.amount, 0);
-  const pendingExpenses = expenses
-    .filter((e) => e.status === "Pending")
-    .reduce((sum, e) => sum + e.amount, 0);
+  const approvedExpenses = filteredExpenses
+    .filter((e: Expense) => e.status === "Approved")
+    .reduce((sum: number, e: Expense) => sum + e.amount, 0);
+  const pendingExpenses = filteredExpenses
+    .filter((e: Expense) => e.status === "Pending")
+    .reduce((sum: number, e: Expense) => sum + e.amount, 0);
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -264,6 +268,51 @@ export default function OrgExpenses() {
     getCategoryColor,
   });
 
+  const toolbar = (tableInstance: any) => (
+    <div className="flex flex-col lg:flex-row gap-4">
+      <DataTableFilter
+        table={tableInstance}
+        columnKey="title"
+        placeholder="Search expenses..."
+        className="max-w-sm"
+      />
+      <StandaloneSelect
+        value={(tableInstance.getColumn('category')?.getFilterValue() as string) ?? 'All'}
+        onValueChange={(value) => 
+          tableInstance.getColumn('category')?.setFilterValue(value === 'All' ? '' : value)
+        }
+        placeholder="All Categories"
+        options={[
+          { value: 'All', label: 'All Categories' },
+          { value: 'Office', label: 'Office' },
+          { value: 'Travel', label: 'Travel' },
+          { value: 'Equipment', label: 'Equipment' },
+          { value: 'Software', label: 'Software' },
+          { value: 'Marketing', label: 'Marketing' },
+          { value: 'Utilities', label: 'Utilities' },
+          { value: 'Other', label: 'Other' },
+        ]}
+      />
+      <StandaloneSelect
+        value={(tableInstance.getColumn('status')?.getFilterValue() as string) ?? 'All'}
+        onValueChange={(value) => 
+          tableInstance.getColumn('status')?.setFilterValue(value === 'All' ? '' : value)
+        }
+        placeholder="All Statuses"
+        options={[
+          { value: 'All', label: 'All Statuses' },
+          { value: 'Approved', label: 'Approved' },
+          { value: 'Pending', label: 'Pending' },
+          { value: 'Rejected', label: 'Rejected' },
+        ]}
+      />
+      <Button variant="outline">
+        <Filter className="w-4 h-4 mr-2" />
+        More Filters
+      </Button>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -289,7 +338,7 @@ export default function OrgExpenses() {
         <StatCard
           title="Total Expenses"
           value={`$${totalExpenses.toLocaleString()}`}
-          subtitle={`${expenses.length} expenses`}
+          subtitle={`${filteredExpenses.length} expenses`}
           icon={TrendingDown}
           variant="red"
           size="medium"
@@ -299,7 +348,7 @@ export default function OrgExpenses() {
           title="Approved"
           value={`$${approvedExpenses.toLocaleString()}`}
           subtitle={`${
-            expenses.filter((e) => e.status === "Approved").length
+            filteredExpenses.filter((e: Expense) => e.status === "Approved").length
           } expenses`}
           icon={DollarSign}
           variant="emerald"
@@ -310,7 +359,7 @@ export default function OrgExpenses() {
           title="Pending Approval"
           value={`$${pendingExpenses.toLocaleString()}`}
           subtitle={`${
-            expenses.filter((e) => e.status === "Pending").length
+            filteredExpenses.filter((e: Expense) => e.status === "Pending").length
           } awaiting`}
           icon={Calendar}
           variant="yellow"
@@ -319,37 +368,13 @@ export default function OrgExpenses() {
       </div>
 
 
-      {/* Filters */}
-      <div className="flex gap-2 flex-wrap">
-        {[
-          "All",
-          "Office",
-          "Travel",
-          "Equipment",
-          "Software",
-          "Marketing",
-          "Utilities",
-          "Other",
-        ].map((category) => (
-          <button
-            key={category}
-            onClick={() => setFilterCategory(category)}
-            className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-              filterCategory === category
-                ? "bg-emerald-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            {category}
-          </button>
-        ))}
-      </div>
-
       {/* Expenses Table */}
       <Card>
         <DataTable
           columns={columns}
-          data={filteredExpenses}
+          data={expenses}
+          toolbar={toolbar}
+          getTableInstance={setTable}
           showPagination={true}
           paginationOptions={{
             pageSizeOptions: [10, 20, 30, 50],
@@ -359,9 +384,7 @@ export default function OrgExpenses() {
             showSelectedRows: false,
           }}
         />
-      </Card>
-
-      {/* Add Expense Dialog */}
+      </Card>      {/* Add Expense Dialog */}
       <FormDialog
         open={isAddOpen}
         onClose={() => setIsAddOpen(false)}

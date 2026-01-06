@@ -21,7 +21,16 @@ export const columns: ColumnDef<FinancialOperation>[] = [
     header: 'Operation ID',
     cell: ({ getValue }) => (
       <span className="text-sm font-mono text-gray-900">{getValue() as string}</span>
-    )
+    ),
+    filterFn: (row, id, value) => {
+      const searchValue = value.toLowerCase();
+      return (
+        row.getValue(id).toString().toLowerCase().includes(searchValue) ||
+        row.original.description.toLowerCase().includes(searchValue) ||
+        row.original.createdBy.toLowerCase().includes(searchValue) ||
+        (row.original.reference && row.original.reference.toLowerCase().includes(searchValue))
+      );
+    },
   },
   {
     accessorKey: 'date',

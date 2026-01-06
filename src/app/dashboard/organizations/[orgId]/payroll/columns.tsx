@@ -33,7 +33,16 @@ export const createPayrollColumns = (
         <p className="text-sm">{row.getValue('employeeName')}</p>
         <p className="text-xs text-gray-500">{row.original.position}</p>
       </div>
-    )
+    ),
+    filterFn: (row, id, value) => {
+      const searchValue = value.toLowerCase();
+      return (
+        row.getValue(id).toString().toLowerCase().includes(searchValue) ||
+        row.original.position.toLowerCase().includes(searchValue) ||
+        row.original.employeeId.toLowerCase().includes(searchValue) ||
+        row.original.department.toLowerCase().includes(searchValue)
+      );
+    },
   },
   {
     accessorKey: 'employeeId',

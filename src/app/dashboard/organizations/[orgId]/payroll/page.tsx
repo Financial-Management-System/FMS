@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import { Card } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
-import { Users, Plus, DollarSign, Calendar, Clock } from 'lucide-react';
+import { Users, Plus, DollarSign, Calendar, Clock, Filter } from 'lucide-react';
 import FormDialog from '@/src/components/custom/formDialog';
 import { z } from 'zod';
 import { payrollSchema } from '@/src/schema';
 import { DataTable } from '@/src/components/dataTable/dataTable';
+import { DataTableFilter } from '@/src/components/dataTable/dataTableFilter';
 import { StatCard } from '@/src/components/custom/statCard';
+import { StandaloneSelect } from '@/src/components/custom/standaloneSelect';
 import { Payroll, createPayrollColumns } from './columns';
 
 
@@ -109,7 +111,14 @@ export default function OrgPayroll() {
   const [payrolls, setPayrolls] = useState<Payroll[]>(mockPayroll);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingPayroll, setEditingPayroll] = useState<Payroll | null>(null);
-  const [filterStatus, setFilterStatus] = useState<string>('All');
+  const [table, setTable] = useState<any>(null);
+
+  const getFilteredData = () => {
+    if (!table) return payrolls;
+    return table.getFilteredRowModel().rows.map((row: any) => row.original);
+  };
+
+  const filteredPayrolls = getFilteredData();
   
 
   const calculateNetPay = (payroll: Payroll) => {
@@ -148,19 +157,59 @@ export default function OrgPayroll() {
     ));
   };
 
-  const filteredPayrolls = filterStatus === 'All' 
-    ? payrolls 
-    : payrolls.filter(payroll => payroll.status === filterStatus);
-
-  const totalPayroll = payrolls.reduce((sum, p) => sum + calculateNetPay(p), 0);
-  const scheduledPayroll = payrolls.filter(p => p.status === 'Scheduled').reduce((sum, p) => sum + calculateNetPay(p), 0);
-  const pendingPayroll = payrolls.filter(p => p.status === 'Pending').reduce((sum, p) => sum + calculateNetPay(p), 0);
+  const totalPayroll = filteredPayrolls.reduce((sum: number, p: Payroll) => sum + calculateNetPay(p), 0);
+  const scheduledPayroll = filteredPayrolls.filter(p => p.status === 'Scheduled').reduce((sum: number, p: Payroll) => sum + calculateNetPay(p), 0);
+  const pendingPayroll = filteredPayrolls.filter(p => p.status === 'Pending').reduce((sum: number, p: Payroll) => sum + calculateNetPay(p), 0);
 
   const columns = createPayrollColumns(
     calculateNetPay,
     handleProcessPayment,
     setEditingPayroll,
     handleDelete
+  );
+
+  const toolbar = (tableInstance: any) => (
+    <div className="flex flex-col lg:flex-row gap-4">
+      <DataTableFilter
+        table={tableInstance}
+        columnKey="employeeName"
+        placeholder="Search employees..."
+        className="max-w-sm"
+      />
+      <StandaloneSelect
+        value={(tableInstance.getColumn('status')?.getFilterValue() as string) ?? 'All'}
+        onValueChange={(value) => 
+          tableInstance.getColumn('status')?.setFilterValue(value === 'All' ? '' : value)
+        }
+        placeholder="All Statuses"
+        options={[
+          { value: 'All', label: 'All Statuses' },
+          { value: 'Scheduled', label: 'Scheduled' },
+          { value: 'Pending', label: 'Pending' },
+          { value: 'Paid', label: 'Paid' },
+        ]}
+      />
+      <StandaloneSelect
+        value={(tableInstance.getColumn('department')?.getFilterValue() as string) ?? 'All'}
+        onValueChange={(value) => 
+          tableInstance.getColumn('department')?.setFilterValue(value === 'All' ? '' : value)
+        }
+        placeholder="All Departments"
+        options={[
+          { value: 'All', label: 'All Departments' },
+          { value: 'Engineering', label: 'Engineering' },
+          { value: 'Marketing', label: 'Marketing' },
+          { value: 'Sales', label: 'Sales' },
+          { value: 'Design', label: 'Design' },
+          { value: 'Human Resources', label: 'Human Resources' },
+          { value: 'Operations', label: 'Operations' },
+        ]}
+      />
+      <Button variant="outline">
+        <Filter className="w-4 h-4 mr-2" />
+        More Filters
+      </Button>
+    </div>
   );
 
   return (
@@ -182,7 +231,7 @@ export default function OrgPayroll() {
         <StatCard
           title="Total Payroll"
           value={`$${totalPayroll.toLocaleString()}`}
-          subtitle={`${payrolls.length} employees`}
+          subtitle={`${filteredPayrolls.length} employees`}
           icon={DollarSign}
           variant="emerald"
           size="medium"
@@ -191,7 +240,7 @@ export default function OrgPayroll() {
         <StatCard
           title="Scheduled"
           value={`$${scheduledPayroll.toLocaleString()}`}
-          subtitle={`${payrolls.filter(p => p.status === 'Scheduled').length} payments`}
+          subtitle={`${filteredPayrolls.filter(p => p.status === 'Scheduled').length} payments`}
           icon={Calendar}
           variant="blue"
           size="medium"
@@ -200,7 +249,7 @@ export default function OrgPayroll() {
         <StatCard
           title="Pending Review"
           value={`$${pendingPayroll.toLocaleString()}`}
-          subtitle={`${payrolls.filter(p => p.status === 'Pending').length} awaiting`}
+          subtitle={`${filteredPayrolls.filter(p => p.status === 'Pending').length} awaiting`}
           icon={Clock}
           variant="yellow"
           size="medium"
@@ -208,28 +257,14 @@ export default function OrgPayroll() {
       </div>
 
 
-      {/* Filters */}
-      <div className="flex gap-2">
-        {['All', 'Scheduled', 'Pending', 'Paid'].map((status) => (
-          <button
-            key={status}
-            onClick={() => setFilterStatus(status)}
-            className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-              filterStatus === status
-                ? 'bg-emerald-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            {status}
-          </button>
-        ))}
-      </div>
 
       {/* Payroll Table */}
       <Card>
         <DataTable
           columns={columns}
-          data={filteredPayrolls}
+          data={payrolls}
+          toolbar={toolbar}
+          getTableInstance={setTable}
           showPagination={true}
           paginationOptions={{
             pageSizeOptions: [10, 20, 30, 50],

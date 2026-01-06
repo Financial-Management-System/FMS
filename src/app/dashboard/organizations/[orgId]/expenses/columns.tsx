@@ -35,7 +35,16 @@ export const createColumns = ({ setEditingExpense, handleDelete, getCategoryColo
         <p className="text-sm">{row.getValue('title')}</p>
         <p className="text-xs text-gray-500">{row.original.description}</p>
       </div>
-    )
+    ),
+    filterFn: (row, id, value) => {
+      const searchValue = value.toLowerCase();
+      return (
+        row.getValue(id).toString().toLowerCase().includes(searchValue) ||
+        row.original.description.toLowerCase().includes(searchValue) ||
+        row.original.vendor.toLowerCase().includes(searchValue) ||
+        row.original.department.toLowerCase().includes(searchValue)
+      );
+    },
   },
   {
     accessorKey: 'category',
