@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, use } from 'react';
 import { Card } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
 import { Badge } from '@/src/components/ui/badge';
@@ -13,68 +13,6 @@ import { StatCard } from '@/src/components/custom/statCard';
 import { StatusBadge } from '@/src/components/custom/StatusBadge';
 import { createColumns, Income } from './columns';
 import ViewIncomeDialog from './viewIncomeDialog';
-
-const mockIncome: Income[] = [
-  {
-    id: '1',
-    source: 'Enterprise License - Acme Corp',
-    category: 'Sales',
-    amount: 125000,
-    currency: 'USD',
-    description: 'Annual enterprise license renewal for 500 users including premium support',
-    receivedDate: '2025-12-10',
-    invoiceNumber: 'INV-2025-001',
-    client: 'Acme Corporation',
-    status: 'Received'
-  },
-  {
-    id: '2',
-    source: 'Consulting Services - TechStart',
-    category: 'Services',
-    amount: 45000,
-    currency: 'USD',
-    description: 'Q4 consulting services for digital transformation project',
-    receivedDate: '2025-12-12',
-    invoiceNumber: 'INV-2025-002',
-    client: 'TechStart Inc.',
-    status: 'Received'
-  },
-  {
-    id: '3',
-    source: 'Investment Return - Portfolio A',
-    category: 'Investment',
-    amount: 18500,
-    currency: 'USD',
-    description: 'Quarterly dividend from technology sector investments',
-    receivedDate: '2025-12-08',
-    client: 'Investment Fund Partners',
-    status: 'Received'
-  },
-  {
-    id: '4',
-    source: 'Government Innovation Grant',
-    category: 'Grant',
-    amount: 75000,
-    currency: 'USD',
-    description: 'R&D grant for sustainable technology development initiative',
-    receivedDate: '2025-12-05',
-    invoiceNumber: 'GRANT-2025-AI-001',
-    client: 'Department of Innovation',
-    status: 'Received'
-  },
-  {
-    id: '5',
-    source: 'Product Sales - Q4',
-    category: 'Sales',
-    amount: 95000,
-    currency: 'USD',
-    description: 'SaaS subscription renewals and new customer acquisitions for December',
-    receivedDate: '2025-12-15',
-    invoiceNumber: 'INV-2025-003',
-    client: 'Multiple Customers',
-    status: 'Pending'
-  }
-];
 
 const formFields = [
   { name: 'source' as const, label: 'Income Source', type: 'text' as const, placeholder: 'e.g., Enterprise License Sale' },
@@ -92,36 +30,93 @@ const formFields = [
   { name: 'client' as const, label: 'Client/Payer', type: 'text' as const, placeholder: 'Client or payer name' },
 ];
 
-export default function OrgIncome() {
-  const [incomes, setIncomes] = useState<Income[]>(mockIncome);
+export default function OrgIncome({ params }: { params: Promise<{ orgId: string }> }) {
+  const resolvedParams = use(params);
+  const [incomes, setIncomes] = useState<Income[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
   const [viewingIncome, setViewingIncome] = useState<Income | null>(null);
   const [filterCategory, setFilterCategory] = useState<string>('All');
 
-  const handleAdd = (data: z.infer<typeof incomeSchema>) => {
-    const newIncome: Income = {
-      id: Date.now().toString(),
-      ...data,
-      status: 'Pending'
-    };
-    setIncomes([newIncome, ...incomes]);
-    setIsAddOpen(false);
+  useEffect(() => {
+    fetchIncomes();
+  }, []);
+
+  const fetchIncomes = async () => {
+    try {
+      const response = await fetch(`/api/income?organizationId=${resolvedParams.orgId}`);
+      const result = await response.json();
+      if (result.success) {
+        const formattedIncomes = result.data.map((income: any) => ({
+          id: income._id,
+          source: income.source || income.title,
+          category: income.category,
+          amount: income.amount,
+          currency: income.currency,
+          description: income.description,
+          receivedDate: income.date ? income.date.split('T')[0] : '',
+          invoiceNumber: income.referenceNumber || '',
+          client: income.client,
+          status: income.status
+        }));
+        setIncomes(formattedIncomes);
+      }
+    } catch (error) {
+      console.error('Failed to fetch incomes:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleEdit = (data: z.infer<typeof incomeSchema>) => {
+  const handleAdd = async (data: z.infer<typeof incomeSchema>) => {
+    try {
+      const response = await fetch('/api/income', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, organizationId: resolvedParams.orgId })
+      });
+      const result = await response.json();
+      if (result.success) {
+        fetchIncomes();
+        setIsAddOpen(false);
+      }
+    } catch (error) {
+      console.error('Failed to add income:', error);
+    }
+  };
+
+  const handleEdit = async (data: z.infer<typeof incomeSchema>) => {
     if (!editingIncome) return;
-    setIncomes(incomes.map(income =>
-      income.id === editingIncome.id
-        ? { ...income, ...data }
-        : income
-    ));
-    setEditingIncome(null);
+    try {
+      const response = await fetch(`/api/income/${editingIncome.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const result = await response.json();
+      if (result.success) {
+        fetchIncomes();
+        setEditingIncome(null);
+      }
+    } catch (error) {
+      console.error('Failed to update income:', error);
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this income entry?')) {
-      setIncomes(incomes.filter(income => income.id !== id));
+      try {
+        const response = await fetch(`/api/income/${id}`, {
+          method: 'DELETE'
+        });
+        const result = await response.json();
+        if (result.success) {
+          fetchIncomes();
+        }
+      } catch (error) {
+        console.error('Failed to delete income:', error);
+      }
     }
   };
 
@@ -139,12 +134,16 @@ export default function OrgIncome() {
 
   const columns = createColumns(setEditingIncome, handleDelete, handleView);
 
+  if (loading) {
+    return <div className="p-6">Loading income data...</div>;
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-start">
         <div>
-          
+          <h2 className="text-2xl text-gray-900">Income</h2>
           <p className="text-gray-600 mt-1">Track and manage organization income streams</p>
         </div>
         <Button onClick={() => setIsAddOpen(true)} className="bg-emerald-600 hover:bg-emerald-700">

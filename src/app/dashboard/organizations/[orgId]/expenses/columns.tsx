@@ -3,10 +3,10 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Eye } from "lucide-react";
 import { StatusBadge } from "@/src/components/custom/StatusBadge";
 
-interface Expense {
+export interface Expense {
   id: string;
   title: string;
   category: 'Office' | 'Travel' | 'Equipment' | 'Software' | 'Marketing' | 'Utilities' | 'Other';
@@ -20,13 +20,23 @@ interface Expense {
   status: 'Approved' | 'Pending' | 'Rejected';
 }
 
-interface ColumnsProps {
-  setEditingExpense: (expense: Expense) => void;
-  handleDelete: (id: string) => void;
-  getCategoryColor: (category: string) => string;
-}
+const getCategoryColor = (category: string) => {
+  switch (category) {
+    case 'Office': return 'bg-blue-100 text-blue-800';
+    case 'Travel': return 'bg-purple-100 text-purple-800';
+    case 'Equipment': return 'bg-orange-100 text-orange-800';
+    case 'Software': return 'bg-cyan-100 text-cyan-800';
+    case 'Marketing': return 'bg-pink-100 text-pink-800';
+    case 'Utilities': return 'bg-green-100 text-green-800';
+    default: return 'bg-gray-100 text-gray-800';
+  }
+};
 
-export const createColumns = ({ setEditingExpense, handleDelete, getCategoryColor }: ColumnsProps): ColumnDef<Expense>[] => [
+export const createColumns = (
+  setEditingExpense: (expense: Expense) => void,
+  handleDelete: (id: string) => void,
+  handleView: (expense: Expense) => void
+): ColumnDef<Expense>[] => [
   {
     accessorKey: 'title',
     header: 'Title',
@@ -113,6 +123,13 @@ export const createColumns = ({ setEditingExpense, handleDelete, getCategoryColo
     header: 'Actions',
     cell: ({ row }) => (
       <div className="flex gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => handleView(row.original)}
+        >
+          <Eye className="w-4 h-4" />
+        </Button>
         <Button
           size="sm"
           variant="outline"
