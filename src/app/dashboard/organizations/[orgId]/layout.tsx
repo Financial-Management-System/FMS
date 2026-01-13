@@ -1,22 +1,50 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter, usePathname } from 'next/navigation';
 import { X, ChevronLeft, LogOut, Menu } from 'lucide-react';
 import { Button } from '@/src/components/ui/button';
 import { cn } from '@/lib/utils';
 import { sidebarSections } from './page';
-import { initialCompanies } from '../page';
+
+interface Organization {
+  _id: string;
+  name: string;
+  org_id: string;
+}
 
 export default function layout({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const router = useRouter();
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [orgName, setOrgName] = useState<string>('');
 
   const orgId = params?.orgId as string;
-  const orgName = initialCompanies.find(c => c.id === orgId)?.name ?? `Organization ${orgId}`;
+
+  // Fetch organization name
+  useEffect(() => {
+    const fetchOrgName = async () => {
+      try {
+        const response = await fetch('/api/organization');
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            const org = result.data.find((o: Organization) => o.org_id === orgId);
+            setOrgName(org?.name || `Organization ${orgId}`);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching organization:', error);
+        setOrgName(`Organization ${orgId}`);
+      }
+    };
+
+    if (orgId) {
+      fetchOrgName();
+    }
+  }, [orgId]);
 
   const isActivePath = (href: string) => {
     const basePath = `/dashboard/organizations/${orgId}`;
@@ -27,11 +55,11 @@ export default function layout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="flex min-h-screen bg-gray-50">
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -45,7 +73,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
-        <div className="h-full flex flex-col">
+        <div className="flex flex-col h-full">
           {/* Sidebar Header */}
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
@@ -74,11 +102,11 @@ export default function layout({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Sidebar Navigation */}
-          <nav className="flex-1 overflow-y-auto p-4 sidebar-scroll">
+          <nav className="flex-1 p-4 overflow-y-auto sidebar-scroll">
             <div className="space-y-6">
               {sidebarSections.map((section, sectionIndex) => (
                 <div key={section.title}>
-                  <h3 className="px-4 mb-2 text-xs uppercase tracking-wider text-gray-500">
+                  <h3 className="px-4 mb-2 text-xs tracking-wider text-gray-500 uppercase">
                     {section.title}
                   </h3>
                   <div className="space-y-1">
@@ -101,7 +129,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
                           )}
                           onClick={() => setIsSidebarOpen(false)}
                         >
-                          <Icon className="w-4 h-4 flex-shrink-0" />
+                          <Icon className="flex-shrink-0 w-4 h-4" />
                           <span className="truncate">{item.name}</span>
                         </Link>
                       );
@@ -116,7 +144,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
                   onClick={() => router.push('/dashboard/organizations')}
                   className="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors text-sm w-full text-left text-red-600 hover:bg-red-50"
                 >
-                  <LogOut className="w-4 h-4 flex-shrink-0" />
+                  <LogOut className="flex-shrink-0 w-4 h-4" />
                   <span className="truncate">Logout</span>
                 </button>
               </div>
@@ -126,9 +154,9 @@ export default function layout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex flex-col flex-1 min-w-0">
         {/* Top Bar */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
+        <header className="px-6 py-4 bg-white border-b border-gray-200">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
@@ -147,7 +175,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+        <main className="flex-1 p-6 overflow-auto">{children}</main>
       </div>
     </div>
   );

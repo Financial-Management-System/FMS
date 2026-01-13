@@ -136,16 +136,19 @@ export const SettingsSchema = z.object({
 
 export type SettingsFormData = z.infer<typeof SettingsSchema>;
 
-// OkaneSpecials (Organizations) Schema
+// OkaneSpecials (Organizations) Schema - Updated to match backend
 export const OkaneSpecialsSchema = z.object({
   name: z.string().min(2, { message: 'Company name must be at least 2 characters.' }),
-  description: z.string().min(10, { message: 'Description must be at least 10 characters.' }),
   category: z.string().min(2, { message: 'Category is required.' }),
+  email: z.string().email({ message: 'Please enter a valid email address.' }),
+  phone: z.string().min(7, { message: 'Phone number must be at least 7 digits.' }),
   location: z.string().min(2, { message: 'Location is required.' }),
-  employees: z.coerce.number().min(1, { message: 'Number of employees must be at least 1.' }),
-  revenue: z.string().min(1, { message: 'Revenue is required.' }),
-  status: z.enum(['Active', 'Pending', 'Inactive']),
-  image: z.string().optional(),
+  country: z.string().min(2, { message: 'Country is required.' }),
+  description: z.string().min(10, { message: 'Description must be at least 10 characters.' }).optional(),
+  employees: z.coerce.number().min(1, { message: 'Number of employees must be at least 1.' }).optional(),
+  revenue: z.string().min(1, { message: 'Revenue is required.' }).optional(),
+  image: z.string().url({ message: 'Please enter a valid URL.' }).optional().or(z.literal('')),
+  status: z.enum(['Active', 'Pending', 'Inactive']).optional(),
 });
 
 export type OkaneSpecialsFormData = z.infer<typeof OkaneSpecialsSchema>;

@@ -2,7 +2,7 @@ import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/src/components/ui/badge';
 import { Button } from '@/src/components/ui/button';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Eye } from 'lucide-react';
 import { StatusBadge } from '@/src/components/custom/StatusBadge';
 
 export interface Income {
@@ -31,16 +31,14 @@ const getCategoryColor = (category: string) => {
 
 export const createColumns = (
   setEditingIncome: (income: Income) => void,
-  handleDelete: (id: string) => void
+  handleDelete: (id: string) => void,
+  handleView: (income: Income) => void
 ): ColumnDef<Income>[] => [
   {
     accessorKey: 'source',
     header: 'Source',
     cell: ({ row }) => (
-      <div>
-        <p className="text-sm">{row.getValue('source')}</p>
-        <p className="text-xs text-gray-500">{row.original.description}</p>
-      </div>
+      <span className="text-sm">{row.getValue('source')}</span>
     )
   },
   {
@@ -53,43 +51,14 @@ export const createColumns = (
     )
   },
   {
-    accessorKey: 'client',
-    header: 'Client',
-    cell: ({ row }) => (
-      <span className="text-sm">{row.getValue('client')}</span>
-    )
-  },
-  {
     accessorKey: 'amount',
     header: 'Amount',
     cell: ({ row }) => {
       const amount = row.getValue('amount') as number;
       return (
-        <div>
-          <p className="text-sm text-emerald-600">
-            +${amount.toLocaleString()}
-          </p>
-          <p className="text-xs text-gray-500">{row.original.currency}</p>
-        </div>
-      );
-    }
-  },
-  {
-    accessorKey: 'receivedDate',
-    header: 'Received Date',
-    cell: ({ row }) => (
-      <span className="text-sm text-gray-600">{row.getValue('receivedDate')}</span>
-    )
-  },
-  {
-    accessorKey: 'invoiceNumber',
-    header: 'Invoice',
-    cell: ({ row }) => {
-      const invoice = row.getValue('invoiceNumber') as string;
-      return invoice ? (
-        <span className="text-sm text-gray-600">{invoice}</span>
-      ) : (
-        <span className="text-xs text-gray-400">—</span>
+        <span className="text-sm text-emerald-600">
+          +${amount.toLocaleString()}
+        </span>
       );
     }
   },
@@ -103,6 +72,13 @@ export const createColumns = (
     header: 'Actions',
     cell: ({ row }) => (
       <div className="flex gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => handleView(row.original)}
+        >
+          <Eye className="w-4 h-4" />
+        </Button>
         <Button
           size="sm"
           variant="outline"

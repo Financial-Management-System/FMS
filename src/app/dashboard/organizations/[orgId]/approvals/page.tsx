@@ -2,11 +2,18 @@
 
 import { useState } from 'react';
 import { Card } from '@/src/components/ui/card';
+import { SectionCard } from '@/src/components/custom/sectionCard';
 import { Button } from '@/src/components/ui/button';
 import { CheckCircle, XCircle, Clock, AlertCircle, Plus, Eye, MessageSquare, User, Calendar } from 'lucide-react';
-import  FormDialog  from '@/src/components/custom/formDialog';
+import FormDialog from '@/src/components/custom/formDialog';
+import { FormWrapper } from '@/src/components/custom/formWrapper';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/src/components/ui/form';
+import { Textarea } from '@/src/components/ui/textarea';
 import { z } from 'zod';
 import { approvalSchema } from '@/src/schema';
+import { DataTable } from '@/src/components/dataTable/dataTable';
+import { DataTableFilter } from '@/src/components/dataTable/dataTableFilter';
+import { createColumns } from './columns';
 
 interface Approval {
   id: string;
@@ -127,9 +134,8 @@ const formFields = [
 export default function OrgApprovalManagement() {
   const [approvals, setApprovals] = useState<Approval[]>(mockApprovals);
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [selectedApproval, setSelectedApproval] = useState<Approval | null>(null);
-  const [filterStatus, setFilterStatus] = useState<string>('All');
-  const [filterPriority, setFilterPriority] = useState<string>('All');
+  const [isCommentOpen, setIsCommentOpen] = useState(false);
+  const [commentText, setCommentText] = useState('');
 
   const handleAdd = (data: z.infer<typeof approvalSchema>) => {
     const newApproval: Approval = {
@@ -155,7 +161,7 @@ export default function OrgApprovalManagement() {
           }
         : approval
     ));
-    setSelectedApproval(null);
+    setIsCommentOpen(false);
   };
 
   const handleReject = (id: string, comments: string = '') => {
@@ -170,7 +176,7 @@ export default function OrgApprovalManagement() {
           }
         : approval
     ));
-    setSelectedApproval(null);
+    setIsCommentOpen(false);
   };
 
   const handleReview = (id: string) => {
@@ -180,14 +186,6 @@ export default function OrgApprovalManagement() {
         : approval
     ));
   };
-
-  let filteredApprovals = approvals;
-  if (filterStatus !== 'All') {
-    filteredApprovals = filteredApprovals.filter(a => a.status === filterStatus);
-  }
-  if (filterPriority !== 'All') {
-    filteredApprovals = filteredApprovals.filter(a => a.priority === filterPriority);
-  }
 
   const pendingCount = approvals.filter(a => a.status === 'Pending').length;
   const reviewCount = approvals.filter(a => a.status === 'Under Review').length;
@@ -203,6 +201,14 @@ export default function OrgApprovalManagement() {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  const columns = createColumns({
+    handleApprove,
+    handleReject,
+    handleReview,
+    setSelectedApproval: () => setIsCommentOpen(true),
+    getPriorityColor
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -240,7 +246,7 @@ export default function OrgApprovalManagement() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Card className="p-4">
+        <SectionCard>
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-gray-600">Pending Approval</p>
@@ -251,9 +257,8 @@ export default function OrgApprovalManagement() {
               <Clock className="w-5 h-5 text-yellow-600" />
             </div>
           </div>
-        </Card>
-
-        <Card className="p-4">
+        </SectionCard>
+        <SectionCard>
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-gray-600">Under Review</p>
@@ -264,9 +269,8 @@ export default function OrgApprovalManagement() {
               <AlertCircle className="w-5 h-5 text-blue-600" />
             </div>
           </div>
-        </Card>
-
-        <Card className="p-4">
+        </SectionCard>
+        <SectionCard>
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Pending Amount</p>
@@ -277,162 +281,46 @@ export default function OrgApprovalManagement() {
               <CheckCircle className="w-5 h-5 text-emerald-600" />
             </div>
           </div>
-        </Card>
+        </SectionCard>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4">
-        <div className="flex gap-2">
-          <span className="py-2 text-sm text-gray-600">Status:</span>
-          {['All', 'Pending', 'Under Review', 'Approved', 'Rejected'].map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilterStatus(status)}
-              className={`px-3 py-1 rounded-lg text-sm transition-colors ${
-                filterStatus === status
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {status}
-            </button>
-          ))}
-        </div>
-        
-        <div className="flex gap-2">
-          <span className="py-2 text-sm text-gray-600">Priority:</span>
-          {['All', 'Critical', 'High', 'Medium', 'Low'].map((priority) => (
-            <button
-              key={priority}
-              onClick={() => setFilterPriority(priority)}
-              className={`px-3 py-1 rounded-lg text-sm transition-colors ${
-                filterPriority === priority
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {priority}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Approvals List */}
-      <div className="space-y-4">
-        {filteredApprovals.map((approval) => (
-          <Card key={approval.id} className="p-6 transition-shadow hover:shadow-md">
-            <div className="space-y-4">
-              {/* Header */}
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-start gap-3">
-                    <div className={`px-3 py-1 rounded-full text-xs ${getPriorityColor(approval.priority)}`}>
-                      {approval.priority}
-                    </div>
-                    <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs ${getStatusColor(approval.status)}`}>
-                      {getStatusIcon(approval.status)}
-                      <span>{approval.status}</span>
-                    </div>
-                  </div>
-                  <h3 className="mt-3 text-lg text-gray-900">{approval.description}</h3>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl text-gray-900">${approval.amount.toLocaleString()}</p>
-                  <p className="mt-1 text-xs text-gray-500">{approval.requestType}</p>
-                </div>
-              </div>
-
-              {/* Details */}
-              <div className="p-4 space-y-3 rounded-lg bg-gray-50">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className="flex items-start gap-2">
-                    <User className="w-4 h-4 text-gray-400 mt-0.5" />
-                    <div>
-                      <p className="text-xs text-gray-500">Requested By</p>
-                      <p className="text-sm text-gray-900">{approval.requestedBy}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Calendar className="w-4 h-4 text-gray-400 mt-0.5" />
-                    <div>
-                      <p className="text-xs text-gray-500">Requested At</p>
-                      <p className="text-sm text-gray-900">{approval.requestedAt}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <p className="mb-1 text-xs text-gray-500">Department</p>
-                  <p className="text-sm text-gray-900">{approval.department}</p>
-                </div>
-
-                <div>
-                  <p className="mb-1 text-xs text-gray-500">Justification</p>
-                  <p className="text-sm text-gray-700">{approval.justification}</p>
-                </div>
-
-                {approval.comments && (
-                  <div className="pt-3 mt-3 border-t border-gray-200">
-                    <div className="flex items-start gap-2">
-                      <MessageSquare className="w-4 h-4 text-gray-400 mt-0.5" />
-                      <div>
-                        <p className="text-xs text-gray-500">Review Comments</p>
-                        <p className="mt-1 text-sm text-gray-900">{approval.comments}</p>
-                        {approval.reviewedBy && (
-                          <p className="mt-1 text-xs text-gray-500">
-                            By {approval.reviewedBy} on {approval.reviewedAt}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Actions */}
-              {(approval.status === 'Pending' || approval.status === 'Under Review') && (
-                <div className="flex gap-2 pt-2">
-                  <Button
-                    size="sm"
-                    className="bg-emerald-600 hover:bg-emerald-700"
-                    onClick={() => handleApprove(approval.id, 'Approved after review')}
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Approve
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-red-600 hover:bg-red-50"
-                    onClick={() => handleReject(approval.id, 'Rejected after review')}
-                  >
-                    <XCircle className="w-4 h-4 mr-2" />
-                    Reject
-                  </Button>
-                  {approval.status === 'Pending' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleReview(approval.id)}
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Mark Under Review
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setSelectedApproval(approval)}
-                  >
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    Add Comment
-                  </Button>
-                </div>
-              )}
+      {/* Approvals Table */}
+      <Card>
+        <DataTable
+          columns={columns}
+          data={approvals}
+          showPagination={true}
+          paginationOptions={{
+            pageSizeOptions: [10, 20, 30, 50],
+            showRowsPerPage: true,
+            showFirstLastButtons: true,
+            showPageInfo: true,
+            showSelectedRows: false,
+          }}
+          toolbar={(table) => (
+            <div className="flex gap-8">
+              <DataTableFilter
+                table={table}
+                columnKey="requestType"
+                placeholder="Filter by type..."
+                className="max-w-sm"
+              />
+              <DataTableFilter
+                table={table}
+                columnKey="department"
+                placeholder="Filter by department..."
+                className="max-w-sm"
+              />
+              <DataTableFilter
+                table={table}
+                columnKey="priority"
+                placeholder="Filter by priority..."
+                className="max-w-sm"
+              />
             </div>
-          </Card>
-        ))}
-      </div>
+          )}
+        />
+      </Card>
 
       {/* Add Request Dialog */}
       <FormDialog
@@ -446,33 +334,40 @@ export default function OrgApprovalManagement() {
         submitLabel="Submit Request"
       />
 
-      {/* Comment Dialog - Simple implementation */}
-      {selectedApproval && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <Card className="w-full max-w-md p-6">
-            <h3 className="mb-4 text-lg text-gray-900">Add Review Comment</h3>
-            <textarea
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              rows={4}
-              placeholder="Enter your comments..."
-            />
-            <div className="flex gap-2 mt-4">
-              <Button
-                className="bg-emerald-600 hover:bg-emerald-700"
-                onClick={() => setSelectedApproval(null)}
-              >
-                Save Comment
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setSelectedApproval(null)}
-              >
-                Cancel
-              </Button>
-            </div>
-          </Card>
-        </div>
-      )}
+      {/* Comment Dialog */}
+      <FormWrapper
+        open={isCommentOpen}
+        onOpenChange={setIsCommentOpen}
+        schema={z.object({ comments: z.string().min(1, 'Comment is required') })}
+        defaultValues={{ comments: '' }}
+        onSubmit={(data) => {
+          console.log('Comment saved:', data.comments);
+          setIsCommentOpen(false);
+        }}
+        title="Add Review Comment"
+        description="Enter your comments for this approval request"
+        submitLabel="Save Comment"
+      >
+        {(form) => (
+          <FormField
+            control={form.control}
+            name="comments"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Comments</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Enter your comments..."
+                    rows={4}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+      </FormWrapper>
     </div>
   );
 }

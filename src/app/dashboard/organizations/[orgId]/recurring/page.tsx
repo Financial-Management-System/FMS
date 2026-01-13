@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import { Card } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
-import { Repeat, Plus, DollarSign, CheckCircle } from 'lucide-react';
+import { Repeat, Plus, DollarSign, CheckCircle, Filter } from 'lucide-react';
 import FormDialog from '@/src/components/custom/formDialog';
 import { z } from 'zod';
 import { recurringExpenseSchema } from '@/src/schema';
 import { DataTable } from '@/src/components/dataTable/dataTable';
+import { DataTableFilter } from '@/src/components/dataTable/dataTableFilter';
 import { StatCard } from '@/src/components/custom/statCard';
+import { StandaloneSelect } from '@/src/components/custom/standaloneSelect';
 import { RecurringExpense, createRecurringExpenseColumns } from './columns';
 
 const mockRecurringExpenses: RecurringExpense[] = [
@@ -144,8 +146,14 @@ export default function OrgRecurringExpenses() {
   const [expenses, setExpenses] = useState<RecurringExpense[]>(mockRecurringExpenses);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<RecurringExpense | null>(null);
-  const [filterCategory, setFilterCategory] = useState<string>('All');
-  const [filterFrequency, setFilterFrequency] = useState<string>('All');
+  const [table, setTable] = useState<any>(null);
+
+  const getFilteredData = () => {
+    if (!table) return expenses;
+    return table.getFilteredRowModel().rows.map((row: any) => row.original);
+  };
+
+  const filteredExpenses = getFilteredData();
 
   const handleAdd = (data: z.infer<typeof recurringExpenseSchema>) => {
     const newExpense: RecurringExpense = {
@@ -200,26 +208,18 @@ export default function OrgRecurringExpenses() {
     return amount * (multipliers[frequency] || 1);
   };
 
-  let filteredExpenses = expenses;
-  if (filterCategory !== 'All') {
-    filteredExpenses = filteredExpenses.filter(e => e.category === filterCategory);
-  }
-  if (filterFrequency !== 'All') {
-    filteredExpenses = filteredExpenses.filter(e => e.frequency === filterFrequency);
-  }
-
-  const totalMonthly = expenses
-    .filter(e => e.status === 'Active')
-    .reduce((sum, e) => {
+  const totalMonthly = filteredExpenses
+    .filter((e: RecurringExpense) => e.status === 'Active')
+    .reduce((sum: number, e: RecurringExpense) => {
       const annualCost = calculateAnnualCost(e.amount, e.frequency);
       return sum + (annualCost / 12);
     }, 0);
 
-  const totalAnnual = expenses
-    .filter(e => e.status === 'Active')
-    .reduce((sum, e) => sum + calculateAnnualCost(e.amount, e.frequency), 0);
+  const totalAnnual = filteredExpenses
+    .filter((e: RecurringExpense) => e.status === 'Active')
+    .reduce((sum: number, e: RecurringExpense) => sum + calculateAnnualCost(e.amount, e.frequency), 0);
 
-  const activeCount = expenses.filter(e => e.status === 'Active').length;
+  const activeCount = filteredExpenses.filter((e: RecurringExpense) => e.status === 'Active').length;
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -260,6 +260,65 @@ export default function OrgRecurringExpenses() {
     setEditingExpense,
     handleCancel,
     handleDelete
+  );
+
+  const toolbar = (tableInstance: any) => (
+    <div className="flex flex-col lg:flex-row gap-4">
+      <DataTableFilter
+        table={tableInstance}
+        columnKey="name"
+        placeholder="Search recurring expenses..."
+        className="max-w-sm"
+      />
+      <StandaloneSelect
+        value={(tableInstance.getColumn('category')?.getFilterValue() as string) ?? 'All'}
+        onValueChange={(value) => 
+          tableInstance.getColumn('category')?.setFilterValue(value === 'All' ? '' : value)
+        }
+        placeholder="All Categories"
+        options={[
+          { value: 'All', label: 'All Categories' },
+          { value: 'Subscription', label: 'Subscription' },
+          { value: 'Utilities', label: 'Utilities' },
+          { value: 'Rent', label: 'Rent' },
+          { value: 'Insurance', label: 'Insurance' },
+          { value: 'Licenses', label: 'Licenses' },
+          { value: 'Other', label: 'Other' },
+        ]}
+      />
+      <StandaloneSelect
+        value={(tableInstance.getColumn('frequency')?.getFilterValue() as string) ?? 'All'}
+        onValueChange={(value) => 
+          tableInstance.getColumn('frequency')?.setFilterValue(value === 'All' ? '' : value)
+        }
+        placeholder="All Frequencies"
+        options={[
+          { value: 'All', label: 'All Frequencies' },
+          { value: 'Daily', label: 'Daily' },
+          { value: 'Weekly', label: 'Weekly' },
+          { value: 'Monthly', label: 'Monthly' },
+          { value: 'Quarterly', label: 'Quarterly' },
+          { value: 'Annually', label: 'Annually' },
+        ]}
+      />
+      <StandaloneSelect
+        value={(tableInstance.getColumn('status')?.getFilterValue() as string) ?? 'All'}
+        onValueChange={(value) => 
+          tableInstance.getColumn('status')?.setFilterValue(value === 'All' ? '' : value)
+        }
+        placeholder="All Statuses"
+        options={[
+          { value: 'All', label: 'All Statuses' },
+          { value: 'Active', label: 'Active' },
+          { value: 'Paused', label: 'Paused' },
+          { value: 'Cancelled', label: 'Cancelled' },
+        ]}
+      />
+      <Button variant="outline">
+        <Filter className="w-4 h-4 mr-2" />
+        More Filters
+      </Button>
+    </div>
   );
 
   return (
@@ -306,48 +365,15 @@ export default function OrgRecurringExpenses() {
         />
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4">
-        <div className="flex gap-2">
-          <span className="text-sm text-gray-600 py-2">Category:</span>
-          {['All', 'Subscription', 'Utilities', 'Rent', 'Insurance', 'Licenses', 'Other'].map((category) => (
-            <button
-              key={category}
-              onClick={() => setFilterCategory(category)}
-              className={`px-3 py-1 rounded-lg text-sm transition-colors ${
-                filterCategory === category
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-        
-        <div className="flex gap-2">
-          <span className="text-sm text-gray-600 py-2">Frequency:</span>
-          {['All', 'Monthly', 'Quarterly', 'Annually'].map((frequency) => (
-            <button
-              key={frequency}
-              onClick={() => setFilterFrequency(frequency)}
-              className={`px-3 py-1 rounded-lg text-sm transition-colors ${
-                filterFrequency === frequency
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {frequency}
-            </button>
-          ))}
-        </div>
-      </div>
+
 
       {/* Recurring Expenses Table */}
       <Card>
         <DataTable
           columns={columns}
-          data={filteredExpenses}
+          data={expenses}
+          toolbar={toolbar}
+          getTableInstance={setTable}
           showPagination={true}
           paginationOptions={{
             pageSizeOptions: [10, 20, 30, 50],

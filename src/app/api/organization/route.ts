@@ -27,7 +27,11 @@ export async function POST(req: Request) {
     const created = await Organization.create({
       ...result.data,
       org_id: generatedOrgId,
-      status: result.data.status?.toLowerCase() || "active",
+      status: result.data.status || "Active",
+      code: result.data.code || result.data.name?.substring(0, 3).toUpperCase(),
+      industry: result.data.industry || result.data.category,
+      address: result.data.address || result.data.location,
+      timezone: result.data.timezone || "UTC",
     });
 
     return NextResponse.json(

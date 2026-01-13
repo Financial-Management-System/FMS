@@ -1,14 +1,20 @@
 import { z } from "zod";
 
 export const organizationCreateSchema = z.object({
-//   org_id: z.string().min(3, "Organization ID must be at least 3 characters"),
   name: z.string().min(2, "Name must be at least 2 characters"),
-  code: z.string().min(2, "Code must be at least 2 characters"),
-  industry: z.string().min(2, "Industry is required"),
+  category: z.string().min(2, "Category is required"),
   email: z.string().email("Invalid email address"),
   phone: z.string().min(7, "Phone number is required"),
-  address: z.string().min(5, "Address is required"),
+  location: z.string().min(2, "Location is required"),
   country: z.string().min(2, "Country is required"),
-  timezone: z.string().min(2, "Timezone is required"),
-  status: z.enum(["active", "inactive"]).optional(),
+  description: z.string().min(10, "Description must be at least 10 characters").optional(),
+  employees: z.coerce.number().min(1, "Number of employees must be at least 1").optional(),
+  revenue: z.string().min(1, "Revenue is required").optional(),
+  image: z.string().url("Invalid image URL").optional().or(z.literal("")),
+  status: z.enum(["Active", "Pending", "Inactive"]).optional(),
+  // Backend fields (auto-generated or optional)
+  code: z.string().optional(),
+  industry: z.string().optional(),
+  address: z.string().optional(),
+  timezone: z.string().optional(),
 });
