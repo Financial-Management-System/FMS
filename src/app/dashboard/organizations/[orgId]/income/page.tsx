@@ -5,6 +5,8 @@ import { Card } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
 import { Badge } from '@/src/components/ui/badge';
 import { TrendingUp, Plus, Edit, Trash2, DollarSign, Calendar, User, FileText } from 'lucide-react';
+import { SearchBar } from '@/src/components/custom/searchBar';
+import { StandaloneSelect } from '@/src/components/custom/standaloneSelect';
 import FormDialog from '@/src/components/custom/formDialog';
 import { z } from 'zod';
 import { incomeSchema } from '@/src/schema';
@@ -37,7 +39,9 @@ export default function OrgIncome({ params }: { params: Promise<{ orgId: string 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
   const [viewingIncome, setViewingIncome] = useState<Income | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('All');
+  const [filterStatus, setFilterStatus] = useState<string>('All');
 
   useEffect(() => {
     fetchIncomes();
@@ -124,9 +128,14 @@ export default function OrgIncome({ params }: { params: Promise<{ orgId: string 
     setViewingIncome(income);
   };
 
-  const filteredIncomes = filterCategory === 'All' 
-    ? incomes 
-    : incomes.filter(income => income.category === filterCategory);
+  const filteredIncomes = incomes.filter(income => {
+    const matchesSearch = income.source.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         income.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         income.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = filterCategory === 'All' || income.category === filterCategory;
+    const matchesStatus = filterStatus === 'All' || income.status === filterStatus;
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
 
   const totalIncome = incomes.reduce((sum, income) => sum + income.amount, 0);
   const receivedIncome = incomes.filter(i => i.status === 'Received').reduce((sum, i) => sum + i.amount, 0);
@@ -182,22 +191,47 @@ export default function OrgIncome({ params }: { params: Promise<{ orgId: string 
         />
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-2">
-        {['All', 'Sales', 'Services', 'Investment', 'Grant', 'Donation', 'Other'].map((category) => (
-          <button
-            key={category}
-            onClick={() => setFilterCategory(category)}
-            className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-              filterCategory === category
-                ? 'bg-emerald-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            {category}
-          </button>
-        ))}
-      </div>
+      {/* Search and Filters */}
+      <Card className="p-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center">
+          <SearchBar
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Search income by source, client, or description..."
+            className="md:flex-1"
+          />
+          
+          <div className="flex gap-2 flex-wrap">
+            <StandaloneSelect
+              value={filterCategory}
+              onValueChange={setFilterCategory}
+              placeholder="All Categories"
+              options={[
+                { value: 'All', label: 'All Categories' },
+                { value: 'Sales', label: 'Sales' },
+                { value: 'Services', label: 'Services' },
+                { value: 'Investment', label: 'Investment' },
+                { value: 'Grant', label: 'Grant' },
+                { value: 'Donation', label: 'Donation' },
+                { value: 'Other', label: 'Other' },
+              ]}
+              className="w-[160px]"
+            />
+            
+            <StandaloneSelect
+              value={filterStatus}
+              onValueChange={setFilterStatus}
+              placeholder="All Status"
+              options={[
+                { value: 'All', label: 'All Status' },
+                { value: 'Received', label: 'Received' },
+                { value: 'Pending', label: 'Pending' },
+              ]}
+              className="w-[140px]"
+            />
+          </div>
+        </div>
+      </Card>
 
       {/* Income Table */}
       <Card>
