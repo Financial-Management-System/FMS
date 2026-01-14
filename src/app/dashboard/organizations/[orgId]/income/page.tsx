@@ -9,6 +9,8 @@ import FormDialog from '@/src/components/custom/formDialog';
 import { z } from 'zod';
 import { incomeSchema } from '@/src/schema';
 import { DataTable } from '@/src/components/dataTable/dataTable';
+import { DataTableFilter } from '@/src/components/dataTable/dataTableFilter';
+import { DataTableDropdownFilter } from '@/src/components/dataTable/dataTableDropdownFilter';
 import { StatCard } from '@/src/components/custom/statCard';
 import { StatusBadge } from '@/src/components/custom/StatusBadge';
 import { createColumns, Income } from './columns';
@@ -97,7 +99,6 @@ export default function OrgIncome() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
   const [viewingIncome, setViewingIncome] = useState<Income | null>(null);
-  const [filterCategory, setFilterCategory] = useState<string>('All');
 
   const handleAdd = (data: z.infer<typeof incomeSchema>) => {
     const newIncome: Income = {
@@ -129,9 +130,7 @@ export default function OrgIncome() {
     setViewingIncome(income);
   };
 
-  const filteredIncomes = filterCategory === 'All' 
-    ? incomes 
-    : incomes.filter(income => income.category === filterCategory);
+  // Remove manual filtering - handled by DataTable
 
   const totalIncome = incomes.reduce((sum, income) => sum + income.amount, 0);
   const receivedIncome = incomes.filter(i => i.status === 'Received').reduce((sum, i) => sum + i.amount, 0);
@@ -183,29 +182,31 @@ export default function OrgIncome() {
         />
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-2">
-        {['All', 'Sales', 'Services', 'Investment', 'Grant', 'Donation', 'Other'].map((category) => (
-          <button
-            key={category}
-            onClick={() => setFilterCategory(category)}
-            className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-              filterCategory === category
-                ? 'bg-emerald-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            {category}
-          </button>
-        ))}
-      </div>
+      {/* Filters integrated in DataTable */}
 
       {/* Income Table */}
       <Card>
         <DataTable
           columns={columns}
-          data={filteredIncomes}
+          data={incomes}
           showPagination={true}
+          toolbar={(table) => (
+            <div className="flex items-center gap-4">
+              <DataTableFilter
+                table={table}
+                columnKey="source"
+                placeholder="Search by source..."
+                className="max-w-sm"
+              />
+              <DataTableDropdownFilter
+                table={table}
+                columnKey="category"
+                options={['Sales', 'Services', 'Investment', 'Grant', 'Donation', 'Other']}
+                placeholder="Filter by category..."
+                className="max-w-sm"
+              />
+            </div>
+          )}
           paginationOptions={{
             pageSizeOptions: [10, 20, 30, 50],
             showRowsPerPage: true,
