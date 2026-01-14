@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/src/lib/db";
+import dbConnect from "@/src/lib/db";
 import { Organization } from "@/src/model/organization.model";
 import mongoose from "mongoose";
 import { validateBody } from "@/src/lib/validate";
@@ -13,7 +13,7 @@ import { paginate } from "@/src/service/pagination.service";
 
 export async function POST(req: Request) {
   try {
-    await connectDB();
+    await dbConnect();
 
     // ✅ Validate request body
     const result = await validateBody(req, organizationCreateSchema);
@@ -72,7 +72,7 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   try {
-    await connectDB();
+    await dbConnect();
 
     const { searchParams } = new URL(req.url);
 
