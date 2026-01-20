@@ -4,24 +4,16 @@ import { useState } from 'react';
 import { Card } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
 import { Input } from '@/src/components/ui/input';
-import { Users, Plus, Edit, Trash2, Mail, Phone, Search, ChevronLeft, ChevronRight, UserCheck, UserX, UserMinus, Filter } from 'lucide-react';
+import { Users, Plus, Search, UserCheck, UserX, UserMinus, Filter } from 'lucide-react';
 
 import { z } from 'zod';
 import { userManagementSchema } from '@/src/schema';
-import { cn } from '@/src/components/ui/utils';
 import FormDialog from '@/src/components/custom/formDialog';
+import { createUserColumns, User, ColumnActions } from './columns';
+import { DataTable } from '@/src/components/dataTable/dataTable';
+import { StatCard } from '@/src/components/custom/statCard';
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  department: string;
-  phone: string;
-  status: 'Active' | 'Inactive' | 'Suspended';
-  joinedDate: string;
-  lastActive?: string;
-}
+
 
 const mockUsers: User[] = [
   {
@@ -272,31 +264,12 @@ export default function OrgUsersManagement() {
     setCurrentPage(page);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Active':
-        return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-      case 'Inactive':
-        return 'bg-gray-100 text-gray-700 border-gray-200';
-      case 'Suspended':
-        return 'bg-red-100 text-red-700 border-red-200';
-      default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
+  const columnActions: ColumnActions = {
+    onEdit: setEditingUser,
+    onDelete: handleDelete
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'Active':
-        return <UserCheck className="w-4 h-4" />;
-      case 'Inactive':
-        return <UserX className="w-4 h-4" />;
-      case 'Suspended':
-        return <UserMinus className="w-4 h-4" />;
-      default:
-        return null;
-    }
-  };
+  const columns = createUserColumns(columnActions);
 
   const stats = {
     total: users.length,
@@ -321,53 +294,30 @@ export default function OrgUsersManagement() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Users</p>
-              <p className="text-2xl mt-1">{stats.total}</p>
-            </div>
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Users className="w-5 h-5 text-blue-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Active</p>
-              <p className="text-2xl mt-1 text-emerald-600">{stats.active}</p>
-            </div>
-            <div className="p-2 bg-emerald-100 rounded-lg">
-              <UserCheck className="w-5 h-5 text-emerald-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Inactive</p>
-              <p className="text-2xl mt-1 text-gray-600">{stats.inactive}</p>
-            </div>
-            <div className="p-2 bg-gray-100 rounded-lg">
-              <UserX className="w-5 h-5 text-gray-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Suspended</p>
-              <p className="text-2xl mt-1 text-red-600">{stats.suspended}</p>
-            </div>
-            <div className="p-2 bg-red-100 rounded-lg">
-              <UserMinus className="w-5 h-5 text-red-600" />
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="Total Users"
+          value={stats.total}
+          icon={Users}
+          variant="blue"
+        />
+        <StatCard
+          title="Active"
+          value={stats.active}
+          icon={UserCheck}
+          variant="emerald"
+        />
+        <StatCard
+          title="Inactive"
+          value={stats.inactive}
+          icon={UserX}
+          variant="gray"
+        />
+        <StatCard
+          title="Suspended"
+          value={stats.suspended}
+          icon={UserMinus}
+          variant="red"
+        />
       </div>
 
       {/* Filters */}
@@ -436,160 +386,27 @@ export default function OrgUsersManagement() {
       </Card>
 
       {/* Data Table */}
-      <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
-                  User
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
-                  Role & Department
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
-                  Contact
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
-                  Joined Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
-                  Last Active
-                </th>
-                <th className="px-6 py-3 text-right text-xs text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {currentUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center text-white flex-shrink-0">
-                        {user.name.split(' ').map(n => n[0]).join('')}
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-900">{user.name}</p>
-                        <p className="text-xs text-gray-500">{user.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div>
-                      <p className="text-sm text-gray-900">{user.role}</p>
-                      <p className="text-xs text-gray-500">{user.department}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Phone className="w-4 h-4" />
-                      <span>{user.phone}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className={cn('inline-flex items-center gap-1 px-2 py-1 rounded-md border text-xs', getStatusColor(user.status))}>
-                      {getStatusIcon(user.status)}
-                      {user.status}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    {new Date(user.joinedDate).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    {user.lastActive ? new Date(user.lastActive).toLocaleDateString() : 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setEditingUser(user)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDelete(user.id)}
-                        className="text-red-600 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Empty State */}
-        {currentUsers.length === 0 && (
-          <div className="p-12 text-center">
-            <Users className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-            <h3 className="text-lg text-gray-900 mb-1">No users found</h3>
-            <p className="text-gray-600">Try adjusting your search or filters</p>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-600">
-                Page {currentPage} of {totalPages}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                  // Show first page, last page, current page, and pages around current
-                  if (
-                    page === 1 ||
-                    page === totalPages ||
-                    (page >= currentPage - 1 && page <= currentPage + 1)
-                  ) {
-                    return (
-                      <Button
-                        key={page}
-                        size="sm"
-                        variant={currentPage === page ? 'default' : 'outline'}
-                        onClick={() => handlePageChange(page)}
-                        className={currentPage === page ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
-                      >
-                        {page}
-                      </Button>
-                    );
-                  } else if (page === currentPage - 2 || page === currentPage + 2) {
-                    return <span key={page} className="px-2">...</span>;
-                  }
-                  return null;
-                })}
-
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-      </Card>
+      <DataTable
+        columns={columns}
+        data={currentUsers}
+        showPagination={totalPages > 1}
+        manualPagination={true}
+        pageCount={totalPages}
+        paginationState={{
+          pageIndex: currentPage - 1,
+          pageSize: ITEMS_PER_PAGE
+        }}
+        onPaginationChange={(updater) => {
+          const newState = typeof updater === 'function' 
+            ? updater({ pageIndex: currentPage - 1, pageSize: ITEMS_PER_PAGE })
+            : updater;
+          setCurrentPage(newState.pageIndex + 1);
+        }}
+        paginationOptions={{
+          showRowsPerPage: false,
+          showPageInfo: true
+        }}
+      />
 
       {/* Add User Dialog */}
       <FormDialog
