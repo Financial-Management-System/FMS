@@ -4,6 +4,8 @@ import { useState, useEffect, use } from 'react';
 import { Card } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
 import { TrendingDown, Plus, DollarSign, Calendar } from 'lucide-react';
+import { SearchBar } from '@/src/components/custom/searchBar';
+import { StandaloneSelect } from '@/src/components/custom/standaloneSelect';
 import FormDialog from '@/src/components/custom/formDialog';
 import { z } from 'zod';
 import { expenseSchema } from '@/src/schema';
@@ -50,7 +52,9 @@ export default function OrgExpenses({ params }: { params: Promise<{ orgId: strin
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [viewingExpense, setViewingExpense] = useState<Expense | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('All');
+  const [filterStatus, setFilterStatus] = useState<string>('All');
 
   useEffect(() => {
     fetchExpenses();
@@ -138,9 +142,14 @@ export default function OrgExpenses({ params }: { params: Promise<{ orgId: strin
     setViewingExpense(expense);
   };
 
-  const filteredExpenses = filterCategory === 'All' 
-    ? expenses 
-    : expenses.filter(expense => expense.category === filterCategory);
+  const filteredExpenses = expenses.filter(expense => {
+    const matchesSearch = expense.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         expense.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         expense.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = filterCategory === 'All' || expense.category === filterCategory;
+    const matchesStatus = filterStatus === 'All' || expense.status === filterStatus;
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
 
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
   const approvedExpenses = expenses.filter(e => e.status === 'Approved').reduce((sum, e) => sum + e.amount, 0);
@@ -196,22 +205,49 @@ export default function OrgExpenses({ params }: { params: Promise<{ orgId: strin
         />
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-2 flex-wrap">
-        {['All', 'Office', 'Travel', 'Equipment', 'Software', 'Marketing', 'Utilities', 'Other'].map((category) => (
-          <button
-            key={category}
-            onClick={() => setFilterCategory(category)}
-            className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-              filterCategory === category
-                ? 'bg-emerald-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            {category}
-          </button>
-        ))}
-      </div>
+      {/* Search and Filters */}
+      <Card className="p-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center">
+          <SearchBar
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Search expenses by title, vendor, or description..."
+            className="md:flex-1"
+          />
+          
+          <div className="flex gap-2 flex-wrap">
+            <StandaloneSelect
+              value={filterCategory}
+              onValueChange={setFilterCategory}
+              placeholder="All Categories"
+              options={[
+                { value: 'All', label: 'All Categories' },
+                { value: 'Office', label: 'Office' },
+                { value: 'Travel', label: 'Travel' },
+                { value: 'Equipment', label: 'Equipment' },
+                { value: 'Software', label: 'Software' },
+                { value: 'Marketing', label: 'Marketing' },
+                { value: 'Utilities', label: 'Utilities' },
+                { value: 'Other', label: 'Other' },
+              ]}
+              className="w-[160px]"
+            />
+            
+            <StandaloneSelect
+              value={filterStatus}
+              onValueChange={setFilterStatus}
+              placeholder="All Status"
+              options={[
+                { value: 'All', label: 'All Status' },
+                { value: 'Approved', label: 'Approved' },
+                { value: 'Pending', label: 'Pending' },
+                { value: 'Rejected', label: 'Rejected' },
+              ]}
+              className="w-[140px]"
+            />
+          </div>
+        </div>
+      </Card>
 
       {/* Expenses Table */}
       <Card>
