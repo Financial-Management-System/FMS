@@ -17,6 +17,9 @@ interface Company {
   email: string;
   phone: string;
   country: string;
+  description?: string;
+  employees?: number;
+  revenue?: string;
 }
 
 interface OrganizationFormProps {
