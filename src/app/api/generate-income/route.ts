@@ -50,8 +50,8 @@ User's description: ${prompt}`;
     // Parse the JSON
     const incomeData = JSON.parse(jsonText);
 
-    // Validate required fields
-    const requiredFields = ['source', 'category', 'amount', 'currency', 'description', 'client'];
+    // Validate only essential fields
+    const requiredFields = ['source', 'amount', 'currency'];
     const missingFields = requiredFields.filter(field => !incomeData[field]);
     
     if (missingFields.length > 0) {
@@ -62,8 +62,11 @@ User's description: ${prompt}`;
     }
 
     // Set defaults for optional fields
+    incomeData.category = incomeData.category || 'Other';
+    incomeData.description = incomeData.description || '';
     incomeData.receivedDate = incomeData.receivedDate || new Date().toISOString().split('T')[0];
     incomeData.invoiceNumber = incomeData.invoiceNumber || '';
+    incomeData.client = incomeData.client || '';
 
     return NextResponse.json({
       success: true,
