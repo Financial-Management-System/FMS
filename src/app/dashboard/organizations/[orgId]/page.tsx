@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
-import Link from 'next/link';
 import { 
   LayoutDashboard, 
   Bell,
