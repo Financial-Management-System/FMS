@@ -1,120 +1,81 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/src/lib/db";
 import { Organization } from "@/src/model/organization.model";
-import mongoose from "mongoose";
-import { validateBody } from "@/src/lib/validate";
-import { organizationCreateSchema } from "@/src/validators/organization.schema";
-import generateOrgId from "@/src/utils/functions";
-import { paginate } from "@/src/service/pagination.service";
-// CREATE ORGANIZATION
-
-
-
-
-export async function POST(req: Request) {
-  try {
-    await dbConnect();
-
-    // ✅ Validate request body
-    const result = await validateBody(req, organizationCreateSchema);
-    if (!result.ok) return result.res;
-
-    // ✅ Generate org_id like org_1, org_2...
-    const generatedOrgId =
-      result.data.org_id || (await generateOrgId());
-
-    // Create organization
-    const created = await Organization.create({
-      ...result.data,
-      org_id: generatedOrgId,
-      status: result.data.status || "Active",
-      code: result.data.code || result.data.name?.substring(0, 3).toUpperCase(),
-      industry: result.data.industry || result.data.category,
-      address: result.data.address || result.data.location,
-      timezone: result.data.timezone || "UTC",
-    });
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Organization created successfully",
-        data: created,
-      },
-      { status: 201 }
-    );
-  } catch (err: any) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: err.message,
-      },
-      { status: 400 }
-    );
-  }
-}
-
-
-// // GET ALL ORGANIZATIONS
-// export async function GET() {
-//   try {
-//     await connectDB();
-
-//     const organizations = await Organization.find().sort({ createdAt: -1 });
-
-//     return NextResponse.json(organizations);
-//   } catch (error: any) {
-//     console.error("Error fetching organizations:", error);
-//     return NextResponse.json({ error: error.message }, { status: 500 });
-//   }
-// }
-
-// Get organizations with pagination + search
 
 export async function GET(req: Request) {
   try {
     await dbConnect();
-
     const { searchParams } = new URL(req.url);
-
-    // Pagination params
     const page = Math.max(1, Number(searchParams.get("page") ?? 1));
-    const limit = Math.min(
-      100,
-      Math.max(1, Number(searchParams.get("limit") ?? 10))
-    );
+    const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") ?? 10)));
     const q = (searchParams.get("q") ?? "").trim();
 
-    // Paginated query
-    const result = await paginate(Organization, {
-      page,
-      limit,
-      q,
-      searchFields: [
-        "org_id",
-        "name",
-        "code",
-        "industry",
-        "email",
-        "country",
-      ],
-      sortBy: "createdAt",
-      sortOrder: -1, // newest first
-    });
+    let query = {};
+    
+    if (q) {
+      query = {
+        $or: [
+          { name: { $regex: q, $options: 'i' } },
+          { org_id: { $regex: q, $options: 'i' } },
+          { industry: { $regex: q, $options: 'i' } }
+        ]
+      };
+    }
 
-    return NextResponse.json(
-      {
-        success: true,
-        ...result,
-      },
-      { status: 200 }
-    );
+    const total = await Organization.countDocuments(query);
+    const totalPages = Math.ceil(total / limit);
+    const skip = (page - 1) * limit;
+    
+    const data = await Organization.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    return NextResponse.json({
+      success: true,
+      data,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1
+      }
+    });
   } catch (error: any) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error.message,
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: false,
+      message: error.message
+    }, { status: 500 });
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    await dbConnect();
+    const body = await req.json();
+    
+    // Generate unique org_id
+    const count = await Organization.countDocuments();
+    const org_id = `org_${count + 1}`;
+    
+    const organization = new Organization({
+      ...body,
+      org_id
+    });
+    
+    await organization.save();
+    
+    return NextResponse.json({
+      success: true,
+      message: "Organization created successfully",
+      data: organization
+    }, { status: 201 });
+  } catch (error: any) {
+    return NextResponse.json({
+      success: false,
+      message: error.message
+    }, { status: 400 });
   }
 }

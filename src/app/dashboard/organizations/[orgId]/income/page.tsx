@@ -3,7 +3,6 @@
 import { useState, useEffect, use } from 'react';
 import { Card } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
 import { TrendingUp, Plus, Edit, Trash2, DollarSign, Calendar, User, FileText } from 'lucide-react';
 import { SearchBar } from '@/src/components/custom/searchBar';
 import { StandaloneSelect } from '@/src/components/custom/standaloneSelect';
@@ -12,7 +11,7 @@ import { z } from 'zod';
 import { incomeSchema } from '@/src/schema';
 import { DataTable } from '@/src/components/dataTable/dataTable';
 import { StatCard } from '@/src/components/custom/statCard';
-import { StatusBadge } from '@/src/components/custom/StatusBadge';
+// import { StatusBadge } from '@/src/components/custom/StatusBadge';
 import { createColumns, Income } from './columns';
 import ViewIncomeDialog from './viewIncomeDialog';
 
