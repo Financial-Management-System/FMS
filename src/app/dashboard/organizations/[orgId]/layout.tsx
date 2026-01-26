@@ -7,7 +7,6 @@ import { X, ChevronLeft, LogOut, Menu } from 'lucide-react';
 import { Button } from '@/src/components/ui/button';
 import { cn } from '@/lib/utils';
 import { sidebarSections } from './page';
-
 interface Organization {
   _id: string;
   name: string;
@@ -70,12 +69,12 @@ export default function layout({ children }: { children: React.ReactNode }) {
           fixed lg:static inset-y-0 left-0 z-50
           w-64 bg-white border-r border-gray-200
           transform transition-transform duration-300 ease-in-out
+          flex flex-col h-screen
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
-        <div className="flex flex-col h-full">
-          {/* Sidebar Header */}
-          <div className="p-6 border-b border-gray-200">
+        {/* Sidebar Header */}
+        <div className="flex-shrink-0 p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <h2 className="text-lg truncate">{orgName}</h2>
@@ -101,8 +100,8 @@ export default function layout({ children }: { children: React.ReactNode }) {
             </Button>
           </div>
 
-          {/* Sidebar Navigation */}
-          <nav className="flex-1 p-4 overflow-y-auto sidebar-scroll">
+        {/* Sidebar Navigation */}
+        <nav className="flex-1 min-h-0 p-4 overflow-y-scroll sidebar-scroll">
             <div className="space-y-6">
               {sidebarSections.map((section, sectionIndex) => (
                 <div key={section.title}>
@@ -150,7 +149,6 @@ export default function layout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           </nav>
-        </div>
       </aside>
 
       {/* Main Content */}
