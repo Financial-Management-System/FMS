@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, use } from 'react';
 import { Card } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
 import { Input } from '@/src/components/ui/input';
@@ -13,182 +13,18 @@ import { createUserColumns, User, ColumnActions } from './columns';
 import { DataTable } from '@/src/components/dataTable/dataTable';
 import { StatCard } from '@/src/components/custom/statCard';
 
-
-
-const mockUsers: User[] = [
-  {
-    id: '1',
-    name: 'John Smith',
-    email: 'john.smith@acme.com',
-    role: 'Engineering Manager',
-    department: 'Engineering',
-    phone: '+1 (555) 001-0001',
-    status: 'Active',
-    joinedDate: '2023-01-15',
-    lastActive: '2025-12-14'
-  },
-  {
-    id: '2',
-    name: 'Sarah Johnson',
-    email: 'sarah.j@acme.com',
-    role: 'Marketing Director',
-    department: 'Marketing',
-    phone: '+1 (555) 001-0002',
-    status: 'Active',
-    joinedDate: '2023-02-20',
-    lastActive: '2025-12-14'
-  },
-  {
-    id: '3',
-    name: 'Michael Brown',
-    email: 'michael.b@acme.com',
-    role: 'Sales Manager',
-    department: 'Sales',
-    phone: '+1 (555) 001-0003',
-    status: 'Active',
-    joinedDate: '2023-03-10',
-    lastActive: '2025-12-13'
-  },
-  {
-    id: '4',
-    name: 'Emily Davis',
-    email: 'emily.d@acme.com',
-    role: 'Financial Analyst',
-    department: 'Finance',
-    phone: '+1 (555) 001-0004',
-    status: 'Active',
-    joinedDate: '2023-04-05',
-    lastActive: '2025-12-14'
-  },
-  {
-    id: '5',
-    name: 'David Wilson',
-    email: 'david.w@acme.com',
-    role: 'HR Manager',
-    department: 'Human Resources',
-    phone: '+1 (555) 001-0005',
-    status: 'Inactive',
-    joinedDate: '2023-05-12',
-    lastActive: '2025-11-20'
-  },
-  {
-    id: '6',
-    name: 'Lisa Anderson',
-    email: 'lisa.a@acme.com',
-    role: 'Product Designer',
-    department: 'Design',
-    phone: '+1 (555) 001-0006',
-    status: 'Active',
-    joinedDate: '2023-06-18',
-    lastActive: '2025-12-14'
-  },
-  {
-    id: '7',
-    name: 'Robert Taylor',
-    email: 'robert.t@acme.com',
-    role: 'DevOps Engineer',
-    department: 'Engineering',
-    phone: '+1 (555) 001-0007',
-    status: 'Active',
-    joinedDate: '2023-07-22',
-    lastActive: '2025-12-13'
-  },
-  {
-    id: '8',
-    name: 'Jennifer Martinez',
-    email: 'jennifer.m@acme.com',
-    role: 'Content Strategist',
-    department: 'Marketing',
-    phone: '+1 (555) 001-0008',
-    status: 'Active',
-    joinedDate: '2023-08-30',
-    lastActive: '2025-12-14'
-  },
-  {
-    id: '9',
-    name: 'Christopher Lee',
-    email: 'chris.l@acme.com',
-    role: 'Sales Representative',
-    department: 'Sales',
-    phone: '+1 (555) 001-0009',
-    status: 'Suspended',
-    joinedDate: '2023-09-14',
-    lastActive: '2025-10-05'
-  },
-  {
-    id: '10',
-    name: 'Amanda White',
-    email: 'amanda.w@acme.com',
-    role: 'Accountant',
-    department: 'Finance',
-    phone: '+1 (555) 001-0010',
-    status: 'Active',
-    joinedDate: '2023-10-25',
-    lastActive: '2025-12-14'
-  },
-  {
-    id: '11',
-    name: 'James Garcia',
-    email: 'james.g@acme.com',
-    role: 'Software Engineer',
-    department: 'Engineering',
-    phone: '+1 (555) 001-0011',
-    status: 'Active',
-    joinedDate: '2023-11-08',
-    lastActive: '2025-12-14'
-  },
-  {
-    id: '12',
-    name: 'Patricia Rodriguez',
-    email: 'patricia.r@acme.com',
-    role: 'Recruiter',
-    department: 'Human Resources',
-    phone: '+1 (555) 001-0012',
-    status: 'Active',
-    joinedDate: '2023-12-03',
-    lastActive: '2025-12-13'
-  },
-  {
-    id: '13',
-    name: 'Daniel Hernandez',
-    email: 'daniel.h@acme.com',
-    role: 'UX Designer',
-    department: 'Design',
-    phone: '+1 (555) 001-0013',
-    status: 'Active',
-    joinedDate: '2024-01-20',
-    lastActive: '2025-12-14'
-  },
-  {
-    id: '14',
-    name: 'Jessica Lopez',
-    email: 'jessica.l@acme.com',
-    role: 'Marketing Specialist',
-    department: 'Marketing',
-    phone: '+1 (555) 001-0014',
-    status: 'Inactive',
-    joinedDate: '2024-02-12',
-    lastActive: '2025-11-15'
-  },
-  {
-    id: '15',
-    name: 'Matthew Gonzalez',
-    email: 'matthew.g@acme.com',
-    role: 'Senior Developer',
-    department: 'Engineering',
-    phone: '+1 (555) 001-0015',
-    status: 'Active',
-    joinedDate: '2024-03-05',
-    lastActive: '2025-12-14'
-  },
-];
-
 const formFields = [
   { name: 'name' as const, label: 'Full Name', type: 'text' as const, placeholder: 'e.g., John Doe' },
   { name: 'email' as const, label: 'Email Address', type: 'email' as const, placeholder: 'john.doe@example.com' },
-  { name: 'role' as const, label: 'Job Role', type: 'text' as const, placeholder: 'e.g., Senior Developer' },
+  { name: 'password' as const, label: 'Password', type: 'password' as const, placeholder: 'Enter password' },
+  { 
+    name: 'role' as const, 
+    label: 'Role', 
+    type: 'select' as const, 
+    options: ['Standard', 'Premium', 'Enterprise'] 
+  },
   { name: 'department' as const, label: 'Department', type: 'text' as const, placeholder: 'e.g., Engineering' },
-  { name: 'phone' as const, label: 'Phone Number', type: 'tel' as const, placeholder: '+1 (555) 000-0000' },
+  { name: 'phone' as const, label: 'Phone Number', type: 'text' as const, placeholder: '+1 (555) 000-0000' },
   { 
     name: 'status' as const, 
     label: 'Status', 
@@ -199,8 +35,10 @@ const formFields = [
 
 const ITEMS_PER_PAGE = 10;
 
-export default function OrgUsersManagement() {
-  const [users, setUsers] = useState<User[]>(mockUsers);
+export default function OrgUsersManagement({ params }: { params: Promise<{ orgId: string }> }) {
+  const resolvedParams = use(params);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [departmentFilter, setDepartmentFilter] = useState<string>('All');
@@ -208,35 +46,89 @@ export default function OrgUsersManagement() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
 
-  const handleAdd = (data: z.infer<typeof userManagementSchema>) => {
-    const newUser: User = {
-      id: Date.now().toString(),
-      name: data.name,
-      email: data.email,
-      role: data.role,
-      department: data.department,
-      phone: data.phone || '',
-      status: data.status,
-      joinedDate: new Date().toISOString().split('T')[0],
-      lastActive: new Date().toISOString().split('T')[0]
-    };
-    setUsers([newUser, ...users]);
-    setIsAddOpen(false);
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch(`/api/users?organizationId=${resolvedParams.orgId}`);
+      const result = await response.json();
+      if (result.success) {
+        const formattedUsers = result.data.map((user: any) => ({
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          department: user.department || '',
+          phone: user.phone || '',
+          status: user.status,
+          joinedDate: user.joinDate ? user.joinDate.split('T')[0] : '',
+          lastActive: user.updatedAt ? user.updatedAt.split('T')[0] : ''
+        }));
+        setUsers(formattedUsers);
+      }
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleEdit = (data: z.infer<typeof userManagementSchema>) => {
+  const handleAdd = async (data: z.infer<typeof userManagementSchema>) => {
+    try {
+      console.log('Sending user data:', data);
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, organizationId: resolvedParams.orgId })
+      });
+      const result = await response.json();
+      console.log('API response:', result);
+      if (result.success) {
+        fetchUsers();
+        setIsAddOpen(false);
+      } else {
+        console.error('API error:', result.error);
+        alert('Failed to add user: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Failed to add user:', error);
+      alert('Failed to add user: ' + error);
+    }
+  };
+
+  const handleEdit = async (data: z.infer<typeof userManagementSchema>) => {
     if (!editingUser) return;
-    setUsers(users.map(user =>
-      user.id === editingUser.id
-        ? { ...user, ...data, phone: data.phone || '' }
-        : user
-    ));
-    setEditingUser(null);
+    try {
+      const response = await fetch(`/api/users/${editingUser.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const result = await response.json();
+      if (result.success) {
+        fetchUsers();
+        setEditingUser(null);
+      }
+    } catch (error) {
+      console.error('Failed to update user:', error);
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to remove this user?')) {
-      setUsers(users.filter(user => user.id !== id));
+      try {
+        const response = await fetch(`/api/users/${id}`, {
+          method: 'DELETE'
+        });
+        const result = await response.json();
+        if (result.success) {
+          fetchUsers();
+        }
+      } catch (error) {
+        console.error('Failed to delete user:', error);
+      }
     }
   };
 
@@ -277,6 +169,10 @@ export default function OrgUsersManagement() {
     inactive: users.filter(u => u.status === 'Inactive').length,
     suspended: users.filter(u => u.status === 'Suspended').length,
   };
+
+  if (loading) {
+    return <div className="p-6">Loading users...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -416,7 +312,7 @@ export default function OrgUsersManagement() {
         title="Add New User"
         description="Add a new team member to your organization"
         schema={userManagementSchema}
-        fields={formFields}
+        fields={formFields as any}
         submitLabel="Add User"
       />
 
@@ -429,11 +325,12 @@ export default function OrgUsersManagement() {
           title="Edit User"
           description="Update user information"
           schema={userManagementSchema}
-          fields={formFields}
+          fields={formFields as any}
           defaultValues={{
             name: editingUser.name,
             email: editingUser.email,
-            role: editingUser.role,
+            password: '', // Don't show existing password
+            role: editingUser.role as 'Standard' | 'Premium' | 'Enterprise',
             department: editingUser.department,
             phone: editingUser.phone,
             status: editingUser.status,
