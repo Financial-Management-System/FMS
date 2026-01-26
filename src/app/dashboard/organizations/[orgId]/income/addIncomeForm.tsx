@@ -59,7 +59,7 @@ export default function AddIncomeForm({ open, onClose, onSubmit }: AddIncomeForm
     setGeneratedData(undefined);
     
     try {
-      const response = await fetch('/api/generate-income', {
+      const response = await fetch('/api/generateIncome', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: incomePrompt })
