@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TransactionService } from '../../../service/transaction.service';
-import { connectDB } from '../../../lib/db';
+import dbConnect from '../../../lib/db';
 
 export async function GET(request: NextRequest) {
   try {
-    await connectDB();
+    await dbConnect();
     
     const { searchParams } = new URL(request.url);
     const organizationId = searchParams.get('organizationId') || 'default';
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await connectDB();
+    await dbConnect();
     
     const body = await request.json();
     

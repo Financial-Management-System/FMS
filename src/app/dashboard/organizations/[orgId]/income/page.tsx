@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import { Card } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
-import { TrendingUp, Plus, Edit, Trash2, DollarSign, Calendar, User, FileText } from 'lucide-react';
+import { TrendingUp, Plus, DollarSign, Calendar } from 'lucide-react';
 import { SearchBar } from '@/src/components/custom/searchBar';
 import { StandaloneSelect } from '@/src/components/custom/standaloneSelect';
 import FormDialog from '@/src/components/custom/formDialog';
@@ -11,9 +11,9 @@ import { z } from 'zod';
 import { incomeSchema } from '@/src/schema';
 import { DataTable } from '@/src/components/dataTable/dataTable';
 import { StatCard } from '@/src/components/custom/statCard';
-// import { StatusBadge } from '@/src/components/custom/StatusBadge';
 import { createColumns, Income } from './columns';
 import ViewIncomeDialog from './viewIncomeDialog';
+import AddIncomeForm from './addIncomeForm';
 
 const formFields = [
   { name: 'source' as const, label: 'Income Source', type: 'text' as const, placeholder: 'e.g., Enterprise License Sale' },
@@ -248,16 +248,11 @@ export default function OrgIncome({ params }: { params: Promise<{ orgId: string 
         />
       </Card>
 
-      {/* Add Income Dialog */}
-      <FormDialog
+      {/* Add Income Form (with prompt) */}
+      <AddIncomeForm
         open={isAddOpen}
         onClose={() => setIsAddOpen(false)}
         onSubmit={handleAdd}
-        title="Add Income"
-        description="Record a new income entry"
-        schema={incomeSchema}
-        fields={formFields}
-        submitLabel="Add Income"
       />
 
       {/* Edit Income Dialog */}

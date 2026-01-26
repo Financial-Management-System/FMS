@@ -54,7 +54,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div 
@@ -66,10 +66,10 @@ export default function layout({ children }: { children: React.ReactNode }) {
       {/* Sidebar */}
       <aside 
         className={`
-          fixed lg:static inset-y-0 left-0 z-50
+          fixed inset-y-0 left-0 z-50
           w-64 bg-white border-r border-gray-200
           transform transition-transform duration-300 ease-in-out
-          flex flex-col h-screen
+          flex flex-col
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
@@ -101,8 +101,8 @@ export default function layout({ children }: { children: React.ReactNode }) {
           </div>
 
         {/* Sidebar Navigation */}
-        <nav className="flex-1 min-h-0 p-4 overflow-y-scroll sidebar-scroll">
-            <div className="space-y-6">
+        <nav className="flex-1 min-h-0 p-4 overflow-y-auto">
+            <div className="space-y-6 pb-4">
               {sidebarSections.map((section, sectionIndex) => (
                 <div key={section.title}>
                   <h3 className="px-4 mb-2 text-xs tracking-wider text-gray-500 uppercase">
@@ -152,9 +152,9 @@ export default function layout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Content */}
-      <div className="flex flex-col flex-1 min-w-0">
+      <div className="fixed inset-y-0 right-0 left-0 lg:left-64 flex flex-col">
         {/* Top Bar */}
-        <header className="px-6 py-4 bg-white border-b border-gray-200">
+        <header className="flex-shrink-0 px-6 py-4 bg-white border-b border-gray-200 z-40">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
@@ -173,7 +173,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-6 overflow-auto">{children}</main>
+        <main className="flex-1 p-6 overflow-y-auto">{children}</main>
       </div>
     </div>
   );
