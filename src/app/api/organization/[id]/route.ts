@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/src/lib/db";
 import { Organization } from "@/src/model/organization.model";
+import mongoose from "mongoose";
 
 // GET SINGLE ORGANIZATION
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -8,7 +9,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     await dbConnect();
     const { id } = await params;
     
-    const organization = await Organization.findById(id);
+    // Check if id is a valid MongoDB ObjectId or use org_id
+    let organization;
+    if (mongoose.Types.ObjectId.isValid(id) && id.length === 24) {
+      organization = await Organization.findById(id);
+    } else {
+      organization = await Organization.findOne({ org_id: id });
+    }
     
     if (!organization) {
       return NextResponse.json(
@@ -45,11 +52,21 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const { id } = await params;
     const body = await req.json();
 
-    const organization = await Organization.findByIdAndUpdate(
-      id,
-      body,
-      { new: true, runValidators: true }
-    );
+    // Check if id is a valid MongoDB ObjectId or use org_id
+    let organization;
+    if (mongoose.Types.ObjectId.isValid(id) && id.length === 24) {
+      organization = await Organization.findByIdAndUpdate(
+        id,
+        body,
+        { new: true, runValidators: true }
+      );
+    } else {
+      organization = await Organization.findOneAndUpdate(
+        { org_id: id },
+        body,
+        { new: true, runValidators: true }
+      );
+    }
 
     if (!organization) {
       return NextResponse.json(
@@ -86,7 +103,13 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     await dbConnect();
     const { id } = await params;
 
-    const organization = await Organization.findByIdAndDelete(id);
+    // Check if id is a valid MongoDB ObjectId or use org_id
+    let organization;
+    if (mongoose.Types.ObjectId.isValid(id) && id.length === 24) {
+      organization = await Organization.findByIdAndDelete(id);
+    } else {
+      organization = await Organization.findOneAndDelete({ org_id: id });
+    }
 
     if (!organization) {
       return NextResponse.json(

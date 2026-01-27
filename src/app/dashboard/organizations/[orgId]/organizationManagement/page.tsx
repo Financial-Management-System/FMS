@@ -1,55 +1,96 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
 import { Input } from '@/src/components/ui/input';
-import { Building2, Edit, Save, X, MapPin, Phone, Mail, Globe, Users, Calendar } from 'lucide-react';
+import { Building2, Edit, Save, X, MapPin, Phone, Mail, Globe, Users, Calendar, Loader2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 interface OrganizationInfo {
+  _id?: string;
+  org_id?: string;
   name: string;
-  legalName: string;
-  taxId: string;
+  code?: string;
   industry: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-  phone: string;
+  description?: string;
+  category?: string;
   email: string;
-  website: string;
-  founded: string;
-  employeeCount: string;
-  fiscalYearEnd: string;
+  phone: string;
+  address: string;
+  location?: string;
+  country: string;
+  timezone?: string;
+  employees?: number;
+  revenue?: string;
+  image?: string;
+  status?: string;
 }
 
-const mockOrgInfo: OrganizationInfo = {
-  name: 'Acme Corporation',
-  legalName: 'Acme Corporation Inc.',
-  taxId: '12-3456789',
-  industry: 'Technology',
-  address: '123 Business Street',
-  city: 'San Francisco',
-  state: 'CA',
-  zipCode: '94105',
-  country: 'United States',
-  phone: '+1 (555) 123-4567',
-  email: 'contact@acmecorp.com',
-  website: 'www.acmecorp.com',
-  founded: '2010',
-  employeeCount: '250-500',
-  fiscalYearEnd: 'December 31',
-};
-
-export default function OrgManagement() {
+export default function OrgManagement({ params }: { params: Promise<{ orgId: string }> }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [orgInfo, setOrgInfo] = useState<OrganizationInfo>(mockOrgInfo);
-  const [editedInfo, setEditedInfo] = useState<OrganizationInfo>(mockOrgInfo);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [orgInfo, setOrgInfo] = useState<OrganizationInfo | null>(null);
+  const [editedInfo, setEditedInfo] = useState<OrganizationInfo | null>(null);
+  const [orgId, setOrgId] = useState<string>('');
 
-  const handleSave = () => {
-    setOrgInfo(editedInfo);
-    setIsEditing(false);
+  // Fetch organization data from API
+  useEffect(() => {
+    const fetchOrgData = async () => {
+      try {
+        const resolvedParams = await params;
+        setOrgId(resolvedParams.orgId);
+        
+        const response = await fetch(`/api/organization/${resolvedParams.orgId}`);
+        const result = await response.json();
+
+        if (result.success) {
+          setOrgInfo(result.data);
+          setEditedInfo(result.data);
+        } else {
+          toast.error(result.message || 'Failed to fetch organization data');
+        }
+      } catch (error) {
+        console.error('Error fetching organization:', error);
+        toast.error('Failed to load organization data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOrgData();
+  }, [params]);
+
+  const handleSave = async () => {
+    if (!editedInfo || !orgId) return;
+    
+    setIsSaving(true);
+    try {
+      const response = await fetch(`/api/organization/${orgId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editedInfo),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setOrgInfo(result.data);
+        setEditedInfo(result.data);
+        setIsEditing(false);
+        toast.success('Organization updated successfully');
+      } else {
+        toast.error(result.message || 'Failed to update organization');
+      }
+    } catch (error) {
+      console.error('Error updating organization:', error);
+      toast.error('Failed to update organization');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -65,14 +106,31 @@ export default function OrgManagement() {
       </label>
       {isEditing ? (
         <Input
-          value={editedInfo[field]}
-          onChange={(e) => setEditedInfo({ ...editedInfo, [field]: e.target.value })}
+          value={editedInfo?.[field] || ''}
+          onChange={(e) => setEditedInfo({ ...editedInfo!, [field]: e.target.value })}
         />
       ) : (
-        <p className="text-gray-900">{value}</p>
+        <p className="text-gray-900">{value || 'N/A'}</p>
       )}
     </div>
   );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
+
+  if (!orgInfo) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <Building2 className="w-16 h-16 text-gray-400 mb-4" />
+        <p className="text-gray-600">Organization not found</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -84,13 +142,22 @@ export default function OrgManagement() {
         <div className="flex gap-2">
           {isEditing ? (
             <>
-              <Button variant="outline" onClick={handleCancel}>
+              <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
                 <X className="w-4 h-4 mr-2" />
                 Cancel
               </Button>
-              <Button onClick={handleSave}>
-                <Save className="w-4 h-4 mr-2" />
-                Save Changes
+              <Button onClick={handleSave} disabled={isSaving}>
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Changes
+                  </>
+                )}
               </Button>
             </>
           ) : (
@@ -116,9 +183,10 @@ export default function OrgManagement() {
           </div>
           <div className="space-y-4">
             <InfoField label="Organization Name" value={orgInfo.name} icon={Building2} field="name" />
-            <InfoField label="Legal Name" value={orgInfo.legalName} icon={Building2} field="legalName" />
-            <InfoField label="Tax ID / EIN" value={orgInfo.taxId} icon={Building2} field="taxId" />
+            <InfoField label="Organization Code" value={orgInfo.code || ''} icon={Building2} field="code" />
+            <InfoField label="Organization ID" value={orgInfo.org_id || ''} icon={Building2} field="org_id" />
             <InfoField label="Industry" value={orgInfo.industry} icon={Building2} field="industry" />
+            <InfoField label="Category" value={orgInfo.category || ''} icon={Building2} field="category" />
           </div>
         </Card>
 
@@ -136,7 +204,7 @@ export default function OrgManagement() {
           <div className="space-y-4">
             <InfoField label="Email Address" value={orgInfo.email} icon={Mail} field="email" />
             <InfoField label="Phone Number" value={orgInfo.phone} icon={Phone} field="phone" />
-            <InfoField label="Website" value={orgInfo.website} icon={Globe} field="website" />
+            <InfoField label="Timezone" value={orgInfo.timezone || ''} icon={Globe} field="timezone" />
           </div>
         </Card>
 
@@ -152,15 +220,9 @@ export default function OrgManagement() {
             </div>
           </div>
           <div className="space-y-4">
-            <InfoField label="Street Address" value={orgInfo.address} icon={MapPin} field="address" />
-            <div className="grid grid-cols-2 gap-4">
-              <InfoField label="City" value={orgInfo.city} icon={MapPin} field="city" />
-              <InfoField label="State" value={orgInfo.state} icon={MapPin} field="state" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <InfoField label="ZIP Code" value={orgInfo.zipCode} icon={MapPin} field="zipCode" />
-              <InfoField label="Country" value={orgInfo.country} icon={MapPin} field="country" />
-            </div>
+            <InfoField label="Address" value={orgInfo.address} icon={MapPin} field="address" />
+            <InfoField label="Location" value={orgInfo.location || ''} icon={MapPin} field="location" />
+            <InfoField label="Country" value={orgInfo.country} icon={MapPin} field="country" />
           </div>
         </Card>
 
@@ -176,9 +238,9 @@ export default function OrgManagement() {
             </div>
           </div>
           <div className="space-y-4">
-            <InfoField label="Founded" value={orgInfo.founded} icon={Calendar} field="founded" />
-            <InfoField label="Employee Count" value={orgInfo.employeeCount} icon={Users} field="employeeCount" />
-            <InfoField label="Fiscal Year End" value={orgInfo.fiscalYearEnd} icon={Calendar} field="fiscalYearEnd" />
+            <InfoField label="Employees" value={orgInfo.employees?.toString() || ''} icon={Users} field="employees" />
+            <InfoField label="Revenue" value={orgInfo.revenue || ''} icon={Calendar} field="revenue" />
+            <InfoField label="Description" value={orgInfo.description || ''} icon={Building2} field="description" />
           </div>
         </Card>
       </div>
