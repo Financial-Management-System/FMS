@@ -59,58 +59,84 @@ interface SidebarItem {
   name: string;
   href: string;
   icon: any;
+  permission?: string;
 }
+
+const modulePermissionMap = {
+  'notifications': 'notifications_view',
+  'organizationManagement': 'system_orgManagement',
+  'orgSettings': 'system_settings',
+  'departments': 'departments_view',
+  'users': 'employees_view',
+  'roles': 'employees_view',
+  'transactions': 'transactions_view',
+  'financialOperations': 'transactions_view',
+  'income': 'income_view',
+  'expenses': 'expenses_view',
+  'payroll': 'payroll_view',
+  'recurring': 'recurring_view',
+  'approvals': 'approvals_view',
+  'approvalRules': 'approvals_rules',
+  'budgets': 'budgets_view',
+  'budgetMonitoring': 'budgets_monitor',
+  'reports': 'reports_view',
+  'analytics': 'analytics_view',
+  'auditLogs': 'auditLogs_view',
+  'currency': 'system_currency',
+  'profile': 'employees_view',
+  'help': 'system_settings'
+};
 
 export const sidebarSections: SidebarSection[] = [
   {
     title: 'Core',
     items: [
       { name: 'Dashboard', href: '', icon: LayoutDashboard },
-      { name: 'Notifications', href: 'notifications', icon: Bell },
-      { name: 'Organization Management', href: 'organizationManagement', icon: Building2 },
-      { name: 'Organization Settings', href: 'orgSettings', icon: Settings },
-      { name: 'Departments / Projects', href: 'departments', icon: FolderKanban },
-      { name: 'Users Management', href: 'users', icon: Users },
-      { name: 'Roles & Permissions', href: 'roles', icon: Shield },
+      { name: 'Notifications', href: 'notifications', icon: Bell, permission: 'notifications_view' },
+      { name: 'Organization Management', href: 'organizationManagement', icon: Building2, permission: 'system_orgManagement' },
+      { name: 'Organization Settings', href: 'orgSettings', icon: Settings, permission: 'system_settings' },
+      { name: 'Departments / Projects', href: 'departments', icon: FolderKanban, permission: 'departments_view' },
+      { name: 'Users Management', href: 'users', icon: Users, permission: 'employees_view' },
+      { name: 'Roles & Permissions', href: 'roles', icon: Shield, permission: 'employees_view' },
     ],
   },
   {
     title: 'Operations',
     items: [
-      { name: 'Transactions', href: 'transactions', icon: ArrowLeftRight },
-      { name: 'Financial Operations', href: 'financialOperations', icon: DollarSign },
-      { name: 'Income', href: 'income', icon: TrendingUp },
-      { name: 'Expenses', href: 'expenses', icon: TrendingDown },
-      { name: 'Payroll / Salary', href: 'payroll', icon: DollarSign },
-      { name: 'Recurring Expenses', href: 'recurring', icon: Repeat },
+      { name: 'Transactions', href: 'transactions', icon: ArrowLeftRight, permission: 'transactions_view' },
+      { name: 'Financial Operations', href: 'financialOperations', icon: DollarSign, permission: 'transactions_view' },
+      { name: 'Income', href: 'income', icon: TrendingUp, permission: 'income_view' },
+      { name: 'Expenses', href: 'expenses', icon: TrendingDown, permission: 'expenses_view' },
+      { name: 'Payroll / Salary', href: 'payroll', icon: DollarSign, permission: 'payroll_view' },
+      { name: 'Recurring Expenses', href: 'recurring', icon: Repeat, permission: 'recurring_view' },
     ],
   },
   {
     title: 'Approval Management',
     items: [
-      { name: 'Approvals', href: 'approvals', icon: CheckSquare },
-      { name: 'Approval Rules', href: 'approvalRules', icon: AlertCircle },
+      { name: 'Approvals', href: 'approvals', icon: CheckSquare, permission: 'approvals_view' },
+      { name: 'Approval Rules', href: 'approvalRules', icon: AlertCircle, permission: 'approvals_rules' },
     ],
   },
   {
     title: 'Budgeting',
     items: [
-      { name: 'Budgets', href: 'budgets', icon: PieChart },
-      { name: 'Budget Monitoring', href: 'budgetMonitoring', icon: BarChart3 },
+      { name: 'Budgets', href: 'budgets', icon: PieChart, permission: 'budgets_view' },
+      { name: 'Budget Monitoring', href: 'budgetMonitoring', icon: BarChart3, permission: 'budgets_monitor' },
     ],
   },
   {
     title: 'Reporting & Analytics',
     items: [
-      { name: 'Reports', href: 'reports', icon: FileText },
-      { name: 'Analytics Dashboard', href: 'analytics', icon: BarChart3 },
+      { name: 'Reports', href: 'reports', icon: FileText, permission: 'reports_view' },
+      { name: 'Analytics Dashboard', href: 'analytics', icon: BarChart3, permission: 'analytics_view' },
     ],
   },
   {
     title: 'System & Controls',
     items: [
-      { name: 'Audit Logs', href: 'auditLogs', icon: ClipboardList },
-      { name: 'Currency Settings', href: 'currency', icon: Coins },
+      { name: 'Audit Logs', href: 'auditLogs', icon: ClipboardList, permission: 'auditLogs_view' },
+      { name: 'Currency Settings', href: 'currency', icon: Coins, permission: 'system_currency' },
     ],
   },
   {

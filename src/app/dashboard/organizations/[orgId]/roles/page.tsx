@@ -154,6 +154,7 @@ export default function RolesPage() {
   const handleEdit = (role: Role) => {
     setEditingRole(role);
     setFormData({ name: role.name, description: role.description || '', status: role.status });
+    setSelectedPermissions(role.permissions || []);
   };
 
   const handleUpdate = async () => {
@@ -162,12 +163,13 @@ export default function RolesPage() {
       const response = await fetch(`/api/roles/${editingRole._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ ...formData, permissions: selectedPermissions })
       });
       if (response.ok) {
         await fetchRoles();
         setEditingRole(null);
         setFormData({ name: '', description: '', status: 'Active' });
+        setSelectedPermissions([]);
       }
     } catch (error) {
       console.error('Error updating role:', error);
@@ -419,10 +421,15 @@ export default function RolesPage() {
       {/* Edit Role Dialog */}
       {editingRole && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Edit Role</h3>
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Edit Role - {editingRole.name}</h3>
+              <Button variant="ghost" size="sm" onClick={() => { setEditingRole(null); setFormData({ name: '', description: '', status: 'Active' }); }}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
             
-            <div className="space-y-4">
+            <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-sm font-medium mb-1">Role Name</label>
                 <input 
@@ -451,6 +458,69 @@ export default function RolesPage() {
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
                 </select>
+              </div>
+            </div>
+
+            {/* Permissions Section */}
+            <div className="border-t pt-4">
+              <h4 className="font-medium mb-4">Permissions</h4>
+              
+              {/* Global Controls */}
+              <div className="flex gap-2 mb-4">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={toggleAllPermissions}
+                >
+                  <Check className="w-4 h-4 mr-1" />
+                  {isAllSelected ? 'Deselect All' : 'Select All Permissions'}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={setReadOnlyPreset}
+                >
+                  Read-only Preset
+                </Button>
+              </div>
+
+              {/* Search */}
+              <input
+                type="text"
+                placeholder="Search permissions..."
+                className="w-full border rounded-md px-3 py-2 mb-4"
+                value={permissionSearch}
+                onChange={(e) => setPermissionSearch(e.target.value)}
+              />
+
+              {/* Modules */}
+              <div className="space-y-4">
+                {Object.entries(modulePermissions).map(([moduleKey, permissions]) => (
+                  <div key={moduleKey} className="border rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <input
+                        type="checkbox"
+                        checked={isModuleFullySelected(moduleKey as keyof typeof modulePermissions)}
+                        onChange={() => toggleModulePermissions(moduleKey as keyof typeof modulePermissions)}
+                        className="rounded"
+                      />
+                      <span className="font-medium">Select all {moduleKey.charAt(0).toUpperCase() + moduleKey.slice(1)}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 ml-6">
+                      {permissions.map(permission => (
+                        <label key={permission.id} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedPermissions.includes(permission.id)}
+                            onChange={() => togglePermission(permission.id)}
+                            className="rounded"
+                          />
+                          <span>{permission.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 

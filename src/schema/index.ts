@@ -179,13 +179,19 @@ export const userManagementSchema = z.object({
     .string()
     .min(2, { message: 'Name must be at least 2 characters.' })
     .max(50, { message: 'Name cannot exceed 50 characters.' }),
+  username: z
+    .string()
+    .min(3, { message: 'Username must be at least 3 characters.' })
+    .max(30, { message: 'Username cannot exceed 30 characters.' })
+    .regex(/^[a-zA-Z0-9_]+$/, { message: 'Username can only contain letters, numbers, and underscores.' })
+    .optional(),
   email: z
     .string()
     .email({ message: 'Please enter a valid email address.' }),
   password: z
     .string()
     .min(6, { message: 'Password must be at least 6 characters.' }),
-  role: z.enum(['Standard', 'Premium', 'Enterprise']).optional(),
+  role: z.string().optional(),
   department: z.string().optional(),
   phone: z
     .string()
