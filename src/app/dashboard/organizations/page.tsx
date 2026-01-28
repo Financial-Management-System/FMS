@@ -178,7 +178,7 @@ export default function OkaneSpecials() {
     <div className="space-y-6">
       {/* Header Section */}
       <PageHeader
-        title="Okane Specials"
+        title="Organizations"
         subtitle="Manage your special operations and company portfolios"
         actionLabel="Add Organization"
         actionIcon={Plus}

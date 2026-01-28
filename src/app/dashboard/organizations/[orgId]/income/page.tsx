@@ -3,21 +3,17 @@
 import { useState, useEffect, use } from 'react';
 import { Card } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
-import { TrendingUp, Plus, Edit, Trash2, DollarSign, Calendar, User, FileText } from 'lucide-react';
+import { TrendingUp, Plus, DollarSign, Calendar } from 'lucide-react';
 import { SearchBar } from '@/src/components/custom/searchBar';
 import { StandaloneSelect } from '@/src/components/custom/standaloneSelect';
 import FormDialog from '@/src/components/custom/formDialog';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/src/components/ui/dialog';
-import { Textarea } from '@/src/components/ui/textarea';
-import { Sparkles } from 'lucide-react';
 import { z } from 'zod';
 import { incomeSchema } from '@/src/schema';
 import { DataTable } from '@/src/components/dataTable/dataTable';
 import { StatCard } from '@/src/components/custom/statCard';
-import { StatusBadge } from '@/src/components/custom/StatusBadge';
 import { createColumns, Income } from './columns';
 import ViewIncomeDialog from './viewIncomeDialog';
+import AddIncomeForm from './addIncomeForm';
 
 const formFields = [
   { name: 'source' as const, label: 'Income Source', type: 'text' as const, placeholder: 'e.g., Enterprise License Sale' },
@@ -40,8 +36,6 @@ export default function OrgIncome({ params }: { params: Promise<{ orgId: string 
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [isPromptOpen, setIsPromptOpen] = useState(false);
-  const [incomePrompt, setIncomePrompt] = useState('');
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
   const [viewingIncome, setViewingIncome] = useState<Income | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -160,7 +154,7 @@ export default function OrgIncome({ params }: { params: Promise<{ orgId: string 
           <h2 className="text-2xl text-gray-900">Income</h2>
           <p className="text-gray-600 mt-1">Track and manage organization income streams</p>
         </div>
-        <Button onClick={() => setIsPromptOpen(true)} className="bg-emerald-600 hover:bg-emerald-700">
+        <Button onClick={() => setIsAddOpen(true)} className="bg-emerald-600 hover:bg-emerald-700">
           <Plus className="w-4 h-4 mr-2" />
           Add Income
         </Button>
@@ -254,57 +248,11 @@ export default function OrgIncome({ params }: { params: Promise<{ orgId: string 
         />
       </Card>
 
-      {/* Add Income Prompt Dialog */}
-      <Dialog open={isPromptOpen} onOpenChange={setIsPromptOpen}>
-        <DialogContent className="sm:max-w-2xl max-h-[80vh] p-8">
-          <DialogHeader className="space-y-4">
-            <DialogTitle className="flex items-center gap-3 text-xl">
-              <Sparkles className="w-6 h-6 text-emerald-600" />
-              Describe Your Income
-            </DialogTitle>
-            <DialogDescription className="text-base leading-relaxed">
-              Tell us about the income you want to add. Include details like source, amount, type, frequency, etc.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6 py-4">
-            <Textarea
-              placeholder="Example: Monthly subscription revenue of $5,000 from Enterprise clients, received on the 1st of each month via bank transfer..."
-              value={incomePrompt}
-              onChange={(e) => setIncomePrompt(e.target.value)}
-              rows={8}
-              className="resize-none text-base p-4 min-h-[200px]"
-            />
-            <div className="flex gap-3 justify-end pt-4">
-              <Button variant="outline" onClick={() => setIsPromptOpen(false)} className="px-6 py-2 text-base">
-                Cancel
-              </Button>
-              <Button 
-                onClick={() => {
-                  setIsPromptOpen(false);
-                  setIsAddOpen(true);
-                  setIncomePrompt('');
-                }}
-                disabled={!incomePrompt.trim()}
-                className="bg-emerald-600 hover:bg-emerald-700 px-6 py-2 text-base"
-              >
-                <Sparkles className="w-5 h-5 mr-2" />
-                Generate Form
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Add Income Dialog */}
-      <FormDialog
+      {/* Add Income Form (with prompt) */}
+      <AddIncomeForm
         open={isAddOpen}
         onClose={() => setIsAddOpen(false)}
         onSubmit={handleAdd}
-        title="Add Income"
-        description="Record a new income entry"
-        schema={incomeSchema}
-        fields={formFields}
-        submitLabel="Add Income"
       />
 
       {/* Edit Income Dialog */}

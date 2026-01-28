@@ -3,6 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useEffect } from 'react';
 import { Button } from '@/src/components/ui/button'; 
 import { Input } from '@/src/components/ui/input'; 
 import { X } from 'lucide-react';
@@ -47,6 +48,13 @@ export default function FormDialog<T extends z.ZodType<any, any>>({
     resolver: zodResolver(schema),
     defaultValues: defaultValues as any,
   });
+
+  // Update form values when defaultValues change (for AI-generated data)
+  useEffect(() => {
+    if (defaultValues && open) {
+      reset(defaultValues as any);
+    }
+  }, [defaultValues, open, reset]);
 
   if (!open) return null;
 

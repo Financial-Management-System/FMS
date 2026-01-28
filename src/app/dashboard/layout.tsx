@@ -31,9 +31,9 @@ export default function layout({ children }: { children: React.ReactNode }) {
   const isOrgDetailRoute = /^\/dashboard\/organizations\/[^/]+(\/|$)/.test(pathname || '');
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
+      <header className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center">
@@ -56,7 +56,8 @@ export default function layout({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto p-6">
+      <main className="flex-1 overflow-y-auto">
+        <div className="max-w-7xl mx-auto p-6">
         {/* Navigation Cards */}
           {!isOrgDetailRoute && (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
@@ -93,6 +94,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
 
         {/* Page Content */}
         {children}
+        </div>
       </main>
     </div>
   );

@@ -182,8 +182,11 @@ export const userManagementSchema = z.object({
   email: z
     .string()
     .email({ message: 'Please enter a valid email address.' }),
-  role: z.string().min(1, { message: 'Role is required.' }),
-  department: z.string().min(1, { message: 'Department is required.' }),
+  password: z
+    .string()
+    .min(6, { message: 'Password must be at least 6 characters.' }),
+  role: z.enum(['Standard', 'Premium', 'Enterprise']).optional(),
+  department: z.string().optional(),
   phone: z
     .string()
     .regex(/^[0-9+\-\s()]+$/, { message: 'Please enter a valid phone number.' })
