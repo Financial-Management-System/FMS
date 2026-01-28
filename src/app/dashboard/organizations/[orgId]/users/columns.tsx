@@ -8,6 +8,7 @@ import { ColumnDef } from '@tanstack/react-table';
 interface User {
   id: string;
   name: string;
+  username?: string;
   email: string;
   role: 'Standard' | 'Premium' | 'Enterprise';
   department: string;

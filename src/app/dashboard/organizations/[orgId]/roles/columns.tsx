@@ -16,7 +16,6 @@ export interface Role {
   _id: string;
   name: string;
   description: string;
-  level: 'Admin' | 'Manager' | 'User' | 'Viewer';
   permissions: string[];
   orgId: string;
   status: 'Active' | 'Inactive';
@@ -30,15 +29,7 @@ interface RoleColumnsProps {
   onManagePermissions: (role: Role) => void;
 }
 
-const getLevelColor = (level: string) => {
-  switch (level) {
-    case 'Admin': return 'bg-red-100 text-red-700 border-red-200';
-    case 'Manager': return 'bg-blue-100 text-blue-700 border-blue-200';
-    case 'User': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-    case 'Viewer': return 'bg-gray-100 text-gray-700 border-gray-200';
-    default: return 'bg-gray-100 text-gray-700 border-gray-200';
-  }
-};
+
 
 export const createRoleColumns = ({ onEdit, onDelete, onManagePermissions }: RoleColumnsProps): ColumnDef<Role>[] => [
   {
@@ -54,15 +45,6 @@ export const createRoleColumns = ({ onEdit, onDelete, onManagePermissions }: Rol
           <div className="text-sm text-gray-500">{row.original.description}</div>
         </div>
       </div>
-    ),
-  },
-  {
-    accessorKey: 'level',
-    header: 'Access Level',
-    cell: ({ row }) => (
-      <Badge className={cn('text-xs', getLevelColor(row.original.level))}>
-        {row.original.level}
-      </Badge>
     ),
   },
   {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/src/lib/db';
 import { UserService } from '@/src/service/user.service';
+import bcrypt from 'bcryptjs';
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,8 +30,9 @@ export async function POST(request: NextRequest) {
     
     const userData = {
       name: body.name,
+      username: body.username,
       email: body.email,
-      password: body.password,
+      password: await bcrypt.hash(body.password, 12),
       role: body.role || 'Standard',
       status: body.status || 'Active',
       balance: body.balance || 0,

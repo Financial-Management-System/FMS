@@ -13,31 +13,12 @@ import { createUserColumns, User, ColumnActions } from './columns';
 import { DataTable } from '@/src/components/dataTable/dataTable';
 import { StatCard } from '@/src/components/custom/statCard';
 
-const formFields = [
-  { name: 'name' as const, label: 'Full Name', type: 'text' as const, placeholder: 'e.g., John Doe' },
-  { name: 'email' as const, label: 'Email Address', type: 'email' as const, placeholder: 'john.doe@example.com' },
-  { name: 'password' as const, label: 'Password', type: 'password' as const, placeholder: 'Enter password' },
-  { 
-    name: 'role' as const, 
-    label: 'Role', 
-    type: 'select' as const, 
-    options: ['Standard', 'Premium', 'Enterprise'] 
-  },
-  { name: 'department' as const, label: 'Department', type: 'text' as const, placeholder: 'e.g., Engineering' },
-  { name: 'phone' as const, label: 'Phone Number', type: 'text' as const, placeholder: '+1 (555) 000-0000' },
-  { 
-    name: 'status' as const, 
-    label: 'Status', 
-    type: 'select' as const, 
-    options: ['Active', 'Inactive', 'Suspended'] 
-  },
-];
-
 const ITEMS_PER_PAGE = 10;
 
 export default function OrgUsersManagement({ params }: { params: Promise<{ orgId: string }> }) {
   const resolvedParams = use(params);
   const [users, setUsers] = useState<User[]>([]);
+  const [roles, setRoles] = useState<{name: string, _id: string}[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
@@ -46,9 +27,43 @@ export default function OrgUsersManagement({ params }: { params: Promise<{ orgId
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
 
+  const formFields = [
+    { name: 'name' as const, label: 'Full Name', type: 'text' as const, placeholder: 'e.g., John Doe' },
+    { name: 'username' as const, label: 'Username', type: 'text' as const, placeholder: 'e.g., johndoe' },
+    { name: 'email' as const, label: 'Email Address', type: 'email' as const, placeholder: 'john.doe@example.com' },
+    { name: 'password' as const, label: 'Password', type: 'password' as const, placeholder: 'Enter password' },
+    { 
+      name: 'role' as const, 
+      label: 'Role', 
+      type: 'select' as const, 
+      options: roles.length > 0 ? roles.map(role => role.name) : ['Standard', 'Premium', 'Enterprise'] 
+    },
+    { name: 'department' as const, label: 'Department', type: 'text' as const, placeholder: 'e.g., Engineering' },
+    { name: 'phone' as const, label: 'Phone Number', type: 'text' as const, placeholder: '+1 (555) 000-0000' },
+    { 
+      name: 'status' as const, 
+      label: 'Status', 
+      type: 'select' as const, 
+      options: ['Active', 'Inactive', 'Suspended'] 
+    },
+  ];
+
   useEffect(() => {
     fetchUsers();
+    fetchRoles();
   }, []);
+
+  const fetchRoles = async () => {
+    try {
+      const response = await fetch(`/api/roles?orgId=${resolvedParams.orgId}`);
+      const result = await response.json();
+      if (result.success) {
+        setRoles(result.data.filter((role: any) => role.status === 'Active'));
+      }
+    } catch (error) {
+      console.error('Failed to fetch roles:', error);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -58,6 +73,7 @@ export default function OrgUsersManagement({ params }: { params: Promise<{ orgId
         const formattedUsers = result.data.map((user: any) => ({
           id: user._id,
           name: user.name,
+          username: user.username || '',
           email: user.email,
           role: user.role,
           department: user.department || '',
@@ -328,6 +344,7 @@ export default function OrgUsersManagement({ params }: { params: Promise<{ orgId
           fields={formFields as any}
           defaultValues={{
             name: editingUser.name,
+            username: editingUser.username || '',
             email: editingUser.email,
             password: '', // Don't show existing password
             role: editingUser.role as 'Standard' | 'Premium' | 'Enterprise',
