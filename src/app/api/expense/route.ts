@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TransactionService } from '../../../service/transaction.service';
-import { connectDB } from '../../../lib/db';
+import dbConnect from '../../../lib/db';
 
 export async function GET(request: NextRequest) {
   try {
-    await connectDB();
-    
+    await dbConnect();
+
     const { searchParams } = new URL(request.url);
     const organizationId = searchParams.get('organizationId') || 'default';
-    
+
     const transactions = await TransactionService.getTransactionsByOrganization(organizationId, 'expense');
-    
+
     return NextResponse.json({ success: true, data: transactions });
   } catch (error: any) {
     return NextResponse.json(
@@ -22,10 +22,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await connectDB();
-    
+    await dbConnect();
+
     const body = await request.json();
-    
+
     const transactionData = {
       ...body,
       type: 'expense',
@@ -33,9 +33,9 @@ export async function POST(request: NextRequest) {
       referenceNumber: body.receiptNumber,
       organizationId: body.organizationId || 'default'
     };
-    
+
     const transaction = await TransactionService.createTransaction(transactionData);
-    
+
     return NextResponse.json({ success: true, data: transaction });
   } catch (error: any) {
     return NextResponse.json(
