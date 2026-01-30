@@ -16,10 +16,11 @@ export interface Transaction {
   user: string;
   email: string;
   amount: number;
-  type: 'Deposit' | 'Withdrawal' | 'Transfer' | 'Payment';
-  status: 'Completed' | 'Pending' | 'Failed';
+  type: 'income' | 'expense' | 'Deposit' | 'Withdrawal' | 'Transfer' | 'Payment';
+  status: 'Completed' | 'Pending' | 'Failed' | 'Received' | 'Overdue' | 'Approved' | 'Rejected';
   date: string;
-  method: string;
+  method?: string;
+  company?: string;
 }
 
 // Organization Types
