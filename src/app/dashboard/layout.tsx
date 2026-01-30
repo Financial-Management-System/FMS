@@ -1,17 +1,28 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ArrowLeftRight, Users, FileText, Settings, Building2 } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { LayoutDashboard, ArrowLeftRight, Users, FileText, Settings, Building2, LogOut, ChevronDown } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui/card';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Badge } from '../../components/ui/badge';
 import { NotificationListener } from '@/src/components/custom/NotificationListener';
 import { NotificationProvider } from '@/src/contexts/NotificationContext';
 import { NotificationBell } from '@/src/components/custom/NotificationBell';
+import { Button } from '../../components/ui/button';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { useState } from 'react';
 
 export default function layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuth();
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
 
   const navigation = [
     { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
@@ -56,9 +67,28 @@ export default function layout({ children }: { children: React.ReactNode }) {
             <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
               Active Session
             </Badge>
-            <Avatar>
-              <AvatarFallback className="bg-emerald-600 text-white">SA</AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <button
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="flex items-center gap-2 p-1 rounded-lg hover:bg-gray-100"
+              >
+                <Avatar>
+                  <AvatarFallback className="bg-emerald-600 text-white">SA</AvatarFallback>
+                </Avatar>
+                <ChevronDown className="w-4 h-4 text-gray-500" />
+              </button>
+              {showDropdown && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
