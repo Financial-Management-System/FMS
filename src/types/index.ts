@@ -130,3 +130,19 @@ export interface PageHeaderProps {
   actionButton?: React.ReactNode;
   action?: React.ReactNode;
 }
+
+// Notification Types
+export interface PusherNotification {
+  title: string;
+  message: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  timestamp: string;
+}
+
+export interface NotificationPayload {
+  title: string;
+  message: string;
+  type?: 'success' | 'error' | 'warning' | 'info';
+  channel?: string;
+  userId?: string;
+}
