@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Filter, Download, TrendingUp, AlertCircle, Clock, DollarSign } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/src/components/ui/button';
@@ -12,51 +12,6 @@ import { Transaction } from '@/src/types';
 import { SectionCard } from '@/src/components/custom/sectionCard';
 import { StatCard } from '@/src/components/custom/statCard';
 import { StandaloneSelect } from '@/src/components/custom/standaloneSelect';
-
-
-// Generate more transactions for pagination demo
-const generateTransactions = (): Transaction[] => {
-  const users = [
-    { name: 'John Smith', email: 'john@example.com' },
-    { name: 'Sarah Johnson', email: 'sarah@example.com' },
-    { name: 'Mike Brown', email: 'mike@example.com' },
-    { name: 'Emma Davis', email: 'emma@example.com' },
-    { name: 'Alex Wilson', email: 'alex@example.com' },
-    { name: 'Lisa Anderson', email: 'lisa@example.com' },
-    { name: 'David Martinez', email: 'david@example.com' },
-    { name: 'Jennifer Lee', email: 'jennifer@example.com' },
-    { name: 'Robert Taylor', email: 'robert@example.com' },
-    { name: 'Patricia White', email: 'patricia@example.com' },
-  ];
-
-  const types = ['Deposit', 'Withdrawal', 'Transfer', 'Payment'] as const;
-  const statuses = ['Completed', 'Pending', 'Failed'] as const;
-  const methods = ['Bank Transfer', 'Wire Transfer', 'Credit Card', 'Debit Card', 'Internal Transfer'];
-
-  const transactions: Transaction[] = [];
-  for (let i = 1; i <= 50; i++) {
-    const user = users[Math.floor(Math.random() * users.length)];
-    const type = types[Math.floor(Math.random() * types.length)];
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
-    const method = methods[Math.floor(Math.random() * methods.length)];
-    const isNegative = type === 'Withdrawal' || type === 'Payment';
-    const amount = (Math.random() * 10000 + 100) * (isNegative ? -1 : 1);
-
-    transactions.push({
-      id: `TXN${String(i).padStart(3, '0')}`,
-      user: user.name,
-      email: user.email,
-      amount: Math.round(amount),
-      type,
-      status,
-      date: `2025-12-${String(Math.floor(Math.random() * 14) + 1).padStart(2, '0')} ${String(Math.floor(Math.random() * 24)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`,
-      method,
-    });
-  }
-  return transactions;
-};
-
-const allTransactions = generateTransactions();
 
 // Column definitions
 export const transactionColumns: ColumnDef<Transaction>[] = [
@@ -70,17 +25,25 @@ export const transactionColumns: ColumnDef<Transaction>[] = [
       const searchValue = value.toLowerCase();
       return (
         row.getValue(id).toString().toLowerCase().includes(searchValue) ||
-        row.original.user.toLowerCase().includes(searchValue) ||
-        row.original.email.toLowerCase().includes(searchValue)
+        row.original.user?.toLowerCase().includes(searchValue) ||
+        row.original.email?.toLowerCase().includes(searchValue) ||
+        row.original.company?.toLowerCase().includes(searchValue)
       );
     },
+  },
+  {
+    accessorKey: 'company',
+    header: 'Company',
+    cell: ({ row }) => (
+      <span className="font-medium">{row.getValue('company') || 'N/A'}</span>
+    ),
   },
   {
     accessorKey: 'user',
     header: 'User Details',
     cell: ({ row }) => (
       <div>
-        <p>{row.getValue('user')}</p>
+        <p>{row.getValue('user') || 'Unknown User'}</p>
         <p className="text-sm text-gray-500">{row.original.email}</p>
       </div>
     ),
@@ -90,23 +53,15 @@ export const transactionColumns: ColumnDef<Transaction>[] = [
     header: 'Amount',
     cell: ({ row }) => {
       const amount = row.getValue('amount') as number;
+      const type = row.original.type;
+      const isNegative = type === 'expense' || type === 'Withdrawal' || type === 'Payment';
+
       return (
-        <span className={amount > 0 ? 'text-emerald-600' : 'text-red-600'}>
-          {amount > 0 ? '+' : ''}${Math.abs(amount).toLocaleString()}
+        <span className={!isNegative ? 'text-emerald-600' : 'text-red-600'}>
+          {!isNegative ? '+' : ''}{isNegative ? '-' : ''}${Math.abs(amount).toLocaleString()}
         </span>
       );
     },
-  },
-  {
-    accessorKey: 'type',
-    header: 'Type',
-  },
-  {
-    accessorKey: 'method',
-    header: 'Method',
-    cell: ({ row }) => (
-      <span className="text-gray-600 text-sm">{row.getValue('method')}</span>
-    ),
   },
   {
     accessorKey: 'status',
@@ -117,7 +72,9 @@ export const transactionColumns: ColumnDef<Transaction>[] = [
     accessorKey: 'date',
     header: 'Date & Time',
     cell: ({ row }) => (
-      <span className="text-gray-600 text-sm">{row.getValue('date')}</span>
+      <span className="text-gray-600 text-sm">
+        {new Date(row.getValue('date')).toLocaleString()}
+      </span>
     ),
   },
   {
@@ -133,6 +90,26 @@ export const transactionColumns: ColumnDef<Transaction>[] = [
 
 export default function Transactions() {
   const [table, setTable] = useState<any>(null);
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
+
+  const fetchTransactions = async () => {
+    try {
+      const response = await fetch('/api/transactions');
+      const result = await response.json();
+      if (result.success) {
+        setAllTransactions(result.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch transactions:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getFilteredData = () => {
     if (!table) return allTransactions;
@@ -140,7 +117,7 @@ export default function Transactions() {
   };
 
   const filteredTransactions = getFilteredData();
-  const totalAmount = filteredTransactions.reduce((sum, t) => sum + t.amount, 0);
+  const totalAmount = filteredTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
   const pendingCount = filteredTransactions.filter(t => t.status === 'Pending').length;
   const failedCount = filteredTransactions.filter(t => t.status === 'Failed').length;
 
@@ -154,7 +131,7 @@ export default function Transactions() {
       />
       <StandaloneSelect
         value={(tableInstance.getColumn('status')?.getFilterValue() as string) ?? 'All'}
-        onValueChange={(value) => 
+        onValueChange={(value) =>
           tableInstance.getColumn('status')?.setFilterValue(value === 'All' ? '' : value)
         }
         placeholder="All Statuses"
@@ -163,20 +140,6 @@ export default function Transactions() {
           { value: 'Completed', label: 'Completed' },
           { value: 'Pending', label: 'Pending' },
           { value: 'Failed', label: 'Failed' },
-        ]}
-      />
-      <StandaloneSelect
-        value={(tableInstance.getColumn('type')?.getFilterValue() as string) ?? 'All'}
-        onValueChange={(value) => 
-          tableInstance.getColumn('type')?.setFilterValue(value === 'All' ? '' : value)
-        }
-        placeholder="All Types"
-        options={[
-          { value: 'All', label: 'All Types' },
-          { value: 'Deposit', label: 'Deposit' },
-          { value: 'Withdrawal', label: 'Withdrawal' },
-          { value: 'Transfer', label: 'Transfer' },
-          { value: 'Payment', label: 'Payment' },
         ]}
       />
       <Button variant="outline">
@@ -228,8 +191,6 @@ export default function Transactions() {
           size="medium"
         />
       </div>
-
-
 
       {/* Transactions Table */}
       <SectionCard title="All Transactions">
