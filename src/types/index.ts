@@ -16,10 +16,11 @@ export interface Transaction {
   user: string;
   email: string;
   amount: number;
-  type: 'Deposit' | 'Withdrawal' | 'Transfer' | 'Payment';
-  status: 'Completed' | 'Pending' | 'Failed';
+  type: 'income' | 'expense' | 'Deposit' | 'Withdrawal' | 'Transfer' | 'Payment';
+  status: 'Completed' | 'Pending' | 'Failed' | 'Received' | 'Overdue' | 'Approved' | 'Rejected';
   date: string;
-  method: string;
+  method?: string;
+  company?: string;
 }
 
 // Organization Types
@@ -128,4 +129,20 @@ export interface PageHeaderProps {
   onAction?: () => void;
   actionButton?: React.ReactNode;
   action?: React.ReactNode;
+}
+
+// Notification Types
+export interface PusherNotification {
+  title: string;
+  message: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  timestamp: string;
+}
+
+export interface NotificationPayload {
+  title: string;
+  message: string;
+  type?: 'success' | 'error' | 'warning' | 'info';
+  channel?: string;
+  userId?: string;
 }

@@ -6,6 +6,9 @@ import { LayoutDashboard, ArrowLeftRight, Users, FileText, Settings, Building2, 
 import { Card, CardContent } from '../../components/ui/card';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Badge } from '../../components/ui/badge';
+import { NotificationListener } from '@/src/components/custom/NotificationListener';
+import { NotificationProvider } from '@/src/contexts/NotificationContext';
+import { NotificationBell } from '@/src/components/custom/NotificationBell';
 import { Button } from '../../components/ui/button';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useState } from 'react';
@@ -42,7 +45,11 @@ export default function layout({ children }: { children: React.ReactNode }) {
   const isOrgDetailRoute = /^\/dashboard\/organizations\/[^/]+(\/|$)/.test(pathname || '');
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
+    <NotificationProvider>
+      <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
+        {/* Real-time Notification Listener */}
+        <NotificationListener />
+      
       {/* Header */}
       <header className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -56,6 +63,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <div className="flex items-center gap-4">
+            <NotificationBell />
             <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
               Active Session
             </Badge>
@@ -126,7 +134,8 @@ export default function layout({ children }: { children: React.ReactNode }) {
         {children}
         </div>
       </main>
-    </div>
+      </div>
+    </NotificationProvider>
   );
   
 }

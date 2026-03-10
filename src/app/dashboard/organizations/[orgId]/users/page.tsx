@@ -9,7 +9,7 @@ import { Users, Plus, Search, UserCheck, UserX, UserMinus, Filter } from 'lucide
 import { z } from 'zod';
 import { userManagementSchema } from '@/src/schema';
 import FormDialog from '@/src/components/custom/formDialog';
-import { createUserColumns, User, ColumnActions } from './columns';
+import { createUserColumns, User, ColumnActions } from '@/src/app/dashboard/columns';
 import { DataTable } from '@/src/components/dataTable/dataTable';
 import { StatCard } from '@/src/components/custom/statCard';
 
@@ -18,7 +18,8 @@ const ITEMS_PER_PAGE = 10;
 export default function OrgUsersManagement({ params }: { params: Promise<{ orgId: string }> }) {
   const resolvedParams = use(params);
   const [users, setUsers] = useState<User[]>([]);
-  const [roles, setRoles] = useState<{name: string, _id: string}[]>([]);
+  const [roles, setRoles] = useState<{ name: string, _id: string }[]>([]);
+  const [departmentsList, setDepartmentsList] = useState<{ name: string, _id: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
@@ -32,26 +33,44 @@ export default function OrgUsersManagement({ params }: { params: Promise<{ orgId
     { name: 'username' as const, label: 'Username', type: 'text' as const, placeholder: 'e.g., johndoe' },
     { name: 'email' as const, label: 'Email Address', type: 'email' as const, placeholder: 'john.doe@example.com' },
     { name: 'password' as const, label: 'Password', type: 'password' as const, placeholder: 'Enter password' },
-    { 
-      name: 'role' as const, 
-      label: 'Role', 
-      type: 'select' as const, 
-      options: roles.length > 0 ? roles.map(role => role.name) : ['Standard', 'Premium', 'Enterprise'] 
+    {
+      name: 'role' as const,
+      label: 'Role',
+      type: 'select' as const,
+      options: roles.length > 0 ? roles.map(role => role.name) : ['Standard', 'Premium', 'Enterprise']
     },
-    { name: 'department' as const, label: 'Department', type: 'text' as const, placeholder: 'e.g., Engineering' },
+    {
+      name: 'department' as const,
+      label: 'Department',
+      type: 'select' as const,
+      options: departmentsList.length > 0 ? departmentsList.map(dept => dept.name) : []
+    },
     { name: 'phone' as const, label: 'Phone Number', type: 'text' as const, placeholder: '+1 (555) 000-0000' },
-    { 
-      name: 'status' as const, 
-      label: 'Status', 
-      type: 'select' as const, 
-      options: ['Active', 'Inactive', 'Suspended'] 
+    {
+      name: 'status' as const,
+      label: 'Status',
+      type: 'select' as const,
+      options: ['Active', 'Inactive', 'Suspended']
     },
   ];
 
   useEffect(() => {
     fetchUsers();
     fetchRoles();
+    fetchDepartments();
   }, []);
+
+  const fetchDepartments = async () => {
+    try {
+      const response = await fetch(`/api/department?org_id=${resolvedParams.orgId}`);
+      const result = await response.json();
+      if (result.success) {
+        setDepartmentsList(result.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch departments:', error);
+    }
+  };
 
   const fetchRoles = async () => {
     try {
@@ -154,9 +173,9 @@ export default function OrgUsersManagement({ params }: { params: Promise<{ orgId
   // Filter users
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.role.toLowerCase().includes(searchTerm.toLowerCase());
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.role.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'All' || user.status === statusFilter;
     const matchesDepartment = departmentFilter === 'All' || user.department === departmentFilter;
     return matchesSearch && matchesStatus && matchesDepartment;
@@ -259,11 +278,10 @@ export default function OrgUsersManagement({ params }: { params: Promise<{ orgId
                       setStatusFilter(status);
                       setCurrentPage(1);
                     }}
-                    className={`px-3 py-1 rounded-lg text-sm transition-colors ${
-                      statusFilter === status
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
+                    className={`px-3 py-1 rounded-lg text-sm transition-colors ${statusFilter === status
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
                   >
                     {status}
                   </button>
@@ -309,7 +327,7 @@ export default function OrgUsersManagement({ params }: { params: Promise<{ orgId
           pageSize: ITEMS_PER_PAGE
         }}
         onPaginationChange={(updater) => {
-          const newState = typeof updater === 'function' 
+          const newState = typeof updater === 'function'
             ? updater({ pageIndex: currentPage - 1, pageSize: ITEMS_PER_PAGE })
             : updater;
           setCurrentPage(newState.pageIndex + 1);
